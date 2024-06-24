@@ -34,7 +34,6 @@ var upload = multer({
 
 const validation = (req, res, next) => {
     let token = req.headers["x-request-token"] || null
-    console.log(token)
     try {
         if(token === null){
             res.send(JSON.stringify({
@@ -44,11 +43,9 @@ const validation = (req, res, next) => {
             }))
             return false
         }
-        var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
-        console.log(decoded)
         next()
     } catch (err) {
-        console.log(err.message)
+       
         res.send(JSON.stringify({
             result: [],
             msg: err.message || "something went wrong",
@@ -65,11 +62,7 @@ router.post('/add_user/', async (req, res) => {
     }
 
     upload(req, res, async (err) => {
-
-        // console.log(req.files)
-        // console.log(req.files.length)
         try {
-
             if (err instanceof multer.MulterError) {
                 // A Multer error occurred when uploading.
                 console.log("Multer Known Error :", err)
@@ -143,12 +136,7 @@ router.post('/add_user/', async (req, res) => {
             })
 
         } catch (e) {
-            //console.log('e',e.data);
-            //console.log('e',e.error.index);
-            //console.log('e',e.error.code);
-            //console.log('e',e.error.keyPattern);
-            //console.log('e',e.error.keyPattern.email);
-			if(e.error.code == 11000 && e.error.keyPattern.email == 1)
+        	if(e.error.code == 11000 && e.error.keyPattern.email == 1)
 			{
 				resBody.msg = "This email is already associated with another account. Please try with some different email."
 			}

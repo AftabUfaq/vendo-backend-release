@@ -62,7 +62,6 @@ const validation = (req, res, next) => {
             return false
         }
         var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
-        console.log(decoded)
         next()
     } catch (err) {
         console.log(err.message)

@@ -2,7 +2,7 @@ const mongoose = require('../database/mongoose');
 const { Schema } = mongoose.mongoose;
 
 mongoose.connect((rej, res) => {
-    console.log(rej, res)
+    
 });
 
 const settingSchema = new Schema({

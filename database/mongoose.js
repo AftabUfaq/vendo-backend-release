@@ -1,8 +1,6 @@
 require('dotenv').config()
 const mongoose = require('mongoose');
 const connectionString = process.env.MONGO_URL;
-const database = process.env.DATABASE;
-
 class Database {
     connection = null;
     mongoose = null;
@@ -22,19 +20,20 @@ class Database {
                 .on('all', console.info.bind(console, 'Database connection: all'))
                 .on('error', console.error.bind(console, 'MongoDB connection: error:'));
         } catch (error) {
-            console.error(error);
+          //  console.error(error);
         }
     }
 
     connect(callback) {
         try {
+            this.mongoose.set("strictQuery", false);
             this.mongoose.connect(`${connectionString}`, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true
             })
                 .then(
                     () => {
-                        console.log("Database connected!")
+                       
                         callback(null, true);
                     },
                     err => {

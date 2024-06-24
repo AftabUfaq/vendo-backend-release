@@ -1,58 +1,65 @@
-const mongoose = require('../database/mongoose');
+const mongoose = require("../database/mongoose");
 const { Schema } = mongoose.mongoose;
 
 // mongoose.connect("username", "password", "dbname");
-mongoose.connect((rej, res) => {
-    console.log(rej, res)
-});
+mongoose.connect((rej, res) => {});
 
 const customerSchema = new Schema({
-    name: { type: String },
-    street: { type: String },
-    postcode: { type: String },
-    place: { type: String },
-    region: { type: String },
-    mobile: { type: String },
-    deactivate: { type: Boolean, default: false },
+  name: { type: String },
+  street: { type: String },
+  postcode: { type: String },
+  place: { type: String },
+  region: { type: String },
+  mobile: { type: String },
+  deactivate: { type: Boolean, default: false },
 
-    voucherTaken: { type: Boolean, default: false },
-    
-    _voucher: [{
-        type: Schema.ObjectId, ref: 'Voucher'
-    }],
+  voucherTaken: { type: Boolean, default: false },
 
-    _voucherTransaction: [{
-        type: Schema.ObjectId, ref: 'Vouchertransaction'
-    }],
-
-    _cart: [{
-        _product: { type: Schema.ObjectId, ref: 'Product' },
-        _quantity: { type: Number },
-         _pid: { type: String }
-    }],
-
-    email: {
-        type: String,
-        unique: true,
+  _voucher: [
+    {
+      type: Schema.ObjectId,
+      ref: "Voucher",
     },
+  ],
 
-    emailVerified: {
-        type: Boolean,
-        default: false
+  _voucherTransaction: [
+    {
+      type: Schema.ObjectId,
+      ref: "Vouchertransaction",
     },
+  ],
 
-    password: {
-        type: String,
+  _cart: [
+    {
+      _product: { type: Schema.ObjectId, ref: "Product" },
+      _quantity: { type: Number },
+      _pid: { type: String },
     },
+  ],
+  loyaltyCards: [{ type: Schema.Types.ObjectId, ref: "CardLog" }],
+  email: {
+    type: String,
+    unique: true,
+  },
 
-    deliveryNote: {
-        type: String
-    },
-    token: {
-        type: String
-    }
-})
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+
+  password: {
+    type: String,
+  },
+
+  deliveryNote: {
+    type: String,
+  },
+  token: {
+    type: String,
+  },
+  loyaltyCards: [{ type: Schema.Types.ObjectId, ref: "LoyaltyCard" }],
+});
 
 const Customer = mongoose.mongoose.model("Customer", customerSchema);
 
-module.exports = Customer
+module.exports = Customer;

@@ -1,7 +1,7 @@
 const dbo = require('../database/mongo');
 
 dbo.connectToServer((rej, res) => {
-    // console.log(rej, res)
+    // 
 })
 
 module.exports = {

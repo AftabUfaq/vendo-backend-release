@@ -1,10 +1,7 @@
 const mongoose = require('../database/mongoose');
 const { Schema } = mongoose.mongoose;
 
-// mongoose.connect("username", "password", "dbname");
-// mongoose.connect((rej, res) => {
-//     console.log(rej, res)
-// });
+
 
 const TransactionSchema = new Schema({
     _products: [{

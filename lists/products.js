@@ -3,7 +3,7 @@ const { Schema } = mongoose.mongoose;
 
 // mongoose.connect("username", "password", "dbname");
 mongoose.connect((rej, res) => {
-    console.log(rej, res)
+    
 });
 
 const productSchema = new Schema({

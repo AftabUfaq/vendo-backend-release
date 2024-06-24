@@ -13,12 +13,12 @@ module.exports = {
         client.connect(function (err, db) {
             if (err || !db) {
                 dbConnection = null
-                console.log(err)
+               
                 return callback(err, false);
             }
 
             dbConnection = db.db(process.env.DATABASE);
-            // console.log("Successfully connected to MongoDB.");
+            
 
             return callback("", true);
         });
