@@ -50,7 +50,7 @@
   "resolved" "https://registry.npmjs.org/@firebase/app-types/-/app-types-0.6.3.tgz"
   "version" "0.6.3"
 
-"@firebase/app-types@0.7.0", "@firebase/app-types@0.x":
+"@firebase/app-types@0.7.0":
   "integrity" "sha512-6fbHQwDv2jp/v6bXhBw2eSRbNBpxHcd1NBF864UksSMVIqIyri9qpJB1Mn6sGZE+bnDsSQBC5j2TbMxYsJQkQg=="
   "resolved" "https://registry.npmjs.org/@firebase/app-types/-/app-types-0.7.0.tgz"
   "version" "0.7.0"
@@ -168,7 +168,7 @@
   dependencies:
     "tslib" "^2.1.0"
 
-"@firebase/util@1.6.3", "@firebase/util@1.x":
+"@firebase/util@1.6.3":
   "integrity" "sha512-FujteO6Zjv6v8A4HS+t7c+PjU0Kaxj+rOnka0BsI/twUaCC9t8EQPmXpWZdk7XfszfahJn2pqsflUWUhtUkRlg=="
   "resolved" "https://registry.npmjs.org/@firebase/util/-/util-1.6.3.tgz"
   "version" "1.6.3"
@@ -1325,7 +1325,7 @@
   "resolved" "https://registry.npmjs.org/event-target-shim/-/event-target-shim-5.0.1.tgz"
   "version" "5.0.1"
 
-"express@^4.17.1", "express@~4.16.1":
+"express@~4.16.1":
   "integrity" "sha512-j12Uuyb4FMrd/qQAm6uCHAkPtO8FDTRJZBDd5D2KOL2eLaz1yUNdUB/NOIyq0iU4q4cFarsUCrnFDPBcnksuOg=="
   "resolved" "https://registry.npmjs.org/express/-/express-4.16.4.tgz"
   "version" "4.16.4"
@@ -1659,7 +1659,7 @@
   dependencies:
     "tslib" "^2.1.0"
 
-"graphql@^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0", "graphql@^14.0.0 || ^15.0.0 || ^16.0.0", "graphql@^14.2.1 || ^15.0.0 || ^16.0.0", "graphql@^15.3.0 || ^16.0.0", "graphql@^16.3.0":
+"graphql@^16.3.0":
   "integrity" "sha512-xm+ANmA16BzCT5pLjuXySbQVFwH3oJctUVdy81w1sV0vBU0KgDdBGtxQOUd5zqOBk/JayAFeG8Dlmeq74rjm/A=="
   "resolved" "https://registry.npmjs.org/graphql/-/graphql-16.3.0.tgz"
   "version" "16.3.0"
@@ -2215,6 +2215,11 @@
   "integrity" "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="
   "resolved" "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
   "version" "1.0.4"
+
+"moment@^2.30.1":
+  "integrity" "sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how=="
+  "resolved" "https://registry.npmjs.org/moment/-/moment-2.30.1.tgz"
+  "version" "2.30.1"
 
 "mongodb-connection-string-url@^2.5.2":
   "integrity" "sha512-tWDyIG8cQlI5k3skB6ywaEA5F9f5OntrKKsT/Lteub2zgwSUlhqEN2inGgBTm8bpYJf8QYBdA/5naz65XDpczA=="

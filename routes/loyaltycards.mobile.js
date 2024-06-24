@@ -38,7 +38,7 @@ router.get("/getCards", validation, async (req, res) => {
       obj.maxPoints  = element.maxPoints
       obj.status = element.status
       obj.details  =  element.details
-      obj.qrCode = element.qrCode
+      obj.qrCodes = element.qrCodes
       obj.validUntil = element.validUntil ? element.validUntil : null
       mydata.push(obj)
 
@@ -93,7 +93,7 @@ router.get("/getCardById/:id", async (req, res) => {
       obj.maxPoints  = element.maxPoints
       obj.status = element.status
       obj.details  =  element.details
-      obj.qrCode = element.qrCode
+      obj.qrCodes = element.qrCodes
       obj.validUntil = element.validUntil ? element.validUntil : null
      
 
@@ -265,9 +265,13 @@ router.post("/claimQrCode", async (req, res) => {
     if (userCards.length === 0) {
       if (globalCardUsable) {
         // create card log
+        let data = await db.getData(LoyaltyCard, {
+          _id: ObjectId(cardId),
+        });
         let createLog = await db.insertOneData(cardLogs, {
           userId: ObjectId(userId),
           cardId: ObjectId(cardId),
+          providerId: ObjectId(data.data[0].vendorId),
           status: "incomplete",
           points: qrCode.points,
           redeemed: false,
@@ -353,9 +357,13 @@ router.post("/claimQrCode", async (req, res) => {
           });
           // Create a new card for remaining points if any
           if (remainingPoints > 0) {
+            const data = await db.getData(LoyaltyCard, {
+              _id: ObjectId(cardId),
+            });
             await db.insertOneData(cardLogs, {
               cardId: ObjectId(cardId),
               userId: ObjectId(userId),
+              providerId: ObjectId(data.data[0].vendorId),
               status: remainingPoints == maxPoints ? "complete" : "incomplete",
               points: remainingPoints,
               redeemed: false,
@@ -368,10 +376,15 @@ router.post("/claimQrCode", async (req, res) => {
         }
       } else {
         if (globalCardUsable) {
+          let data = await db.getData(LoyaltyCard, {
+            _id: ObjectId(cardId),
+          });
+          console.log("======> vendorId", data.data[0].vendorId);
           // create card log
           let createLog = await db.insertOneData(cardLogs, {
             userId: ObjectId(userId),
             cardId: ObjectId(cardId),
+            providerId: ObjectId(data.data[0].vendorId),
             status: "incomplete",
             points: qrCode.points,
             redeemed: false,
@@ -422,6 +435,7 @@ router.get("/getCardsForVendor/:id", async (req, res) => {
       obj.logo = element.vendorId.logo.filename
       obj.maxPoints  = element.maxPoints
       obj.status = element.status
+      obj.qrCode  =element.qrCode
       obj.details  =  element.details
       obj.valid_until = element.valid_until
       mydata.push(obj)
@@ -433,6 +447,7 @@ router.get("/getCardsForVendor/:id", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
+
 
 router.get("/getCardsForUser/:id", async (req, res) => {
   const { id } = req.params;
@@ -465,42 +480,9 @@ router.get("/getCardsForUser/:id", async (req, res) => {
         },
       ]
     );
-   
-    let myData = []
-    activeCards.data.map((item, index) => {
-      let obj = {}
-      obj._id = item._id
-      obj.cardId = item.cardId._id
-      obj.details = item.cardId.details
-      obj.maxPoints =  item.cardId.maxPoints
-      obj.userId = item.userId
-      obj.status = item.status
-      obj.points = item.points
-      obj.providerId = item.providerId._id
-      obj.providerName = item.providerId.providerName
-      obj.address = item.providerId.address
-      obj.region = item.providerId.region
-      obj.logo = item.providerId.logo.filename
-      myData.push(obj)
-    })
-    let myData2 = []
-    redeemedCards.data.map((item, index) => {
-      let obj = {}
-      obj._id = item._id
-      obj.cardId = item.cardId._id
-      obj.details = item.cardId.details
-      obj.maxPoints =  item.cardId.maxPoints
-      obj.userId = item.userId
-      obj.status = item.status
-      obj.points = item.points
-      obj.providerId = item.providerId._id
-      obj.providerName = item.providerId.providerName
-      obj.address = item.providerId.address
-      obj.region = item.providerId.region
-      obj.logo = item.providerId.logo.filename
-      myData2.push(obj)
-    })
-    res.json({ status: true, result: { redeemedCards:myData2, activeCards:myData } });
+    console.log("Active cards", activeCards);
+
+    res.json({ status: true, result: { redeemedCards, activeCards } });
   } catch (error) {
     console.log("Error", error);
     res.json({ status: false, msg: "Something went wrong: " + error });
