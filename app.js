@@ -10,10 +10,12 @@ var createInitialUser = require("./initial-admin");
 createInitialUser();
 
 var indexRouter = require("./routes/index");
+var indexTest = require("./routes/index_test");
 const users = require("./routes/users");
 const adminUsers = require("./routes/adminusers");
 const staticContents = require("./routes/staticContent");
 const providers = require("./routes/providers");
+const providers_test = require("./routes/providers_test");
 const vouchers = require("./routes/vouchers");
 const products = require("./routes/products");
 const loyaltyCards = require("./routes/loyaltycards");
@@ -44,12 +46,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/files", express.static(process.env.FILE_PATH));
 
 app.use("/", indexRouter);
+app.use("/test", indexTest);
 app.use("/users", users);
 app.use("/providers", providers);
 app.use("/admin", adminUsers);
 app.use("/vouchers", vouchers);
 app.use("/products", products);
 app.use("/cards", loyaltyCards);
+app.use('/providers_test',providers_test)
 app.use("/cards_mobile",loyaltyCardsMobile)
 app.use("/staticcontents", staticContents);
 app.get("*", function (req, res) {

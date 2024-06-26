@@ -11,7 +11,7 @@ const PrefeedModel = require('../lists/prfeed')
 const Setting = require('../lists/setting')
 const OtpModel = require('../lists/otp')
 const db = require('../database/mongooseCrud')
-const ProviderLikeRoot = require('../lists/root_provider_like') 
+const ProviderLikeRoot = require('../lists/root_provider_like')
 const ProviderWishlistRoot = require('../lists/root_provider_wishlist')
 const { sendMail } = require('../system/mail');
 
@@ -81,32 +81,32 @@ const validation = (req, res, next) => {
 }
 
 const uploadImage = async (base64image, fieldname) => {
-	try {
-		// to declare some path to store your converted image
-		// var matches = base64image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
-			response = {};
+    try {
+        // to declare some path to store your converted image
+        // var matches = base64image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
+        response = {};
         // console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",matches);
-		// if (matches.length !== 3) {
-		// 	return ['Invalid input string', null]
-		// }
+        // if (matches.length !== 3) {
+        // 	return ['Invalid input string', null]
+        // }
 
-		// response.type = matches[1];
+        // response.type = matches[1];
         const base64 = fs.readFileSync("path-to-image.jpg", base64image);
         response.type = "image/png";
-		response.data = Buffer.from(base64, 'base64');
-		let decodedImg = response;
-		let imageBuffer = decodedImg.data;
-		let type = decodedImg.type;
+        response.data = Buffer.from(base64, 'base64');
+        let decodedImg = response;
+        let imageBuffer = decodedImg.data;
+        let type = decodedImg.type;
 
-		let extension = type.split('/')[1];
-		let fileName = `${+new Date()}-${fieldname}.` + extension;
-		// fs.writeFileSync(path.join(__dirname, "../files/") + fileName, imageBuffer, 'utf8');
-		fs.writeFileSync(process.env.FILE_PATH, imageBuffer, 'utf8');
-		return [null, fileName];
-	} catch (e) {
-		console.error(e);
-		return [e, null]
-	}
+        let extension = type.split('/')[1];
+        let fileName = `${+new Date()}-${fieldname}.` + extension;
+        // fs.writeFileSync(path.join(__dirname, "../files/") + fileName, imageBuffer, 'utf8');
+        fs.writeFileSync(process.env.FILE_PATH, imageBuffer, 'utf8');
+        return [null, fileName];
+    } catch (e) {
+        console.error(e);
+        return [e, null]
+    }
 }
 
 router.post('/add_user/', validation, (req, res) => {
@@ -155,7 +155,7 @@ router.post('/add_user/', validation, (req, res) => {
             //const pass = crypto.createHash('sha256').update(password).digest('base64');
             //req.body.password = pass
 
-            let { data, error } = await db.insertOneData(ProviderModel,  {...req.body,update_time:new Date().toISOString(), ...extraBody })
+            let { data, error } = await db.insertOneData(ProviderModel, { ...req.body, update_time: new Date().toISOString(), ...extraBody })
 
             if (error === null) {
                 resBody.status = true
@@ -429,7 +429,7 @@ router.post('/updateUser', validation, async (req, res) => {
     }
 
     upload(req, res, async (err) => {
-    //    console.log(req.body,"kkkkkkkkkkkkkkkkkkk")
+        //    console.log(req.body,"kkkkkkkkkkkkkkkkkkk")
         // console.log(req.files)
         // console.log(req.files.length)
         try {
@@ -449,7 +449,7 @@ router.post('/updateUser', validation, async (req, res) => {
             }
 
             let extraBody = {}
-            var tempPRFeedData = [] 
+            var tempPRFeedData = []
 
             if ((req.files || []).length > 0) {
                 req.files.forEach(i => {
@@ -460,38 +460,38 @@ router.post('/updateUser', validation, async (req, res) => {
             }
 
             let body = req.body
-        //    console.log(req.body,"LLLLLLLLLLLLLLLL")
-            if(Object.keys(req.body).includes('company_presentation_subject_line') || Object.keys(req.body).includes('company_presentation_input_text') || Object.keys(extraBody).includes('company_presentation_picture_1') || Object.keys(extraBody).includes('company_presentation_picture_2') || Object.keys(req.body).includes('company_presentation_feed_show_status') || Object.keys(req.body).includes('companyWelcomeStartDay') || Object.keys(req.body).includes('companyWelcomeEndDay')){
-                    body.company_presentation_update_time = new Date().toISOString();
+            //    console.log(req.body,"LLLLLLLLLLLLLLLL")
+            if (Object.keys(req.body).includes('company_presentation_subject_line') || Object.keys(req.body).includes('company_presentation_input_text') || Object.keys(extraBody).includes('company_presentation_picture_1') || Object.keys(extraBody).includes('company_presentation_picture_2') || Object.keys(req.body).includes('company_presentation_feed_show_status') || Object.keys(req.body).includes('companyWelcomeStartDay') || Object.keys(req.body).includes('companyWelcomeEndDay')) {
+                body.company_presentation_update_time = new Date().toISOString();
             }
 
-            if(Object.keys(req.body).includes('job_advertisement_subject_line') || Object.keys(req.body).includes('job_advertisement_input_text') || Object.keys(extraBody).includes('job_advertisement_picture_1') || Object.keys(extraBody).includes('job_advertisement_picture_2') || Object.keys(req.body).includes('job_advertisement_feed_show_status') || Object.keys(req.body).includes('jobAdvertisementWelcomeStartDay') || Object.keys(req.body).includes('jobAdvertisementWelcomeEndDay')){
-                    body.job_advertisement_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('job_advertisement_subject_line') || Object.keys(req.body).includes('job_advertisement_input_text') || Object.keys(extraBody).includes('job_advertisement_picture_1') || Object.keys(extraBody).includes('job_advertisement_picture_2') || Object.keys(req.body).includes('job_advertisement_feed_show_status') || Object.keys(req.body).includes('jobAdvertisementWelcomeStartDay') || Object.keys(req.body).includes('jobAdvertisementWelcomeEndDay')) {
+                body.job_advertisement_update_time = new Date().toISOString();
             }
 
-            if(Object.keys(req.body).includes('flyer_subject_line') || Object.keys(req.body).includes('flyer_input_text') || Object.keys(extraBody).includes('flyer_picture_1') || Object.keys(extraBody).includes('flyer_picture_2') || Object.keys(req.body).includes('flyer_feed_show_status') || Object.keys(req.body).includes('flyerWelcomeStartDay') || Object.keys(req.body).includes('flyerWelcomeEndDay')){
-                    body.flyer_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('flyer_subject_line') || Object.keys(req.body).includes('flyer_input_text') || Object.keys(extraBody).includes('flyer_picture_1') || Object.keys(extraBody).includes('flyer_picture_2') || Object.keys(req.body).includes('flyer_feed_show_status') || Object.keys(req.body).includes('flyerWelcomeStartDay') || Object.keys(req.body).includes('flyerWelcomeEndDay')) {
+                body.flyer_update_time = new Date().toISOString();
             }
 
-            if(Object.keys(req.body).includes('advertisement_subject_line') || Object.keys(req.body).includes('advertisement_input_text') || Object.keys(extraBody).includes('advertisement_picture_1') || Object.keys(extraBody).includes('advertisement_picture_2') || Object.keys(req.body).includes('advertisement_feed_show_status') || Object.keys(req.body).includes('advertisementWelcomeStartDay') || Object.keys(req.body).includes('advertisementWelcomeEndDay')){
-                    body.advertisement_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('advertisement_subject_line') || Object.keys(req.body).includes('advertisement_input_text') || Object.keys(extraBody).includes('advertisement_picture_1') || Object.keys(extraBody).includes('advertisement_picture_2') || Object.keys(req.body).includes('advertisement_feed_show_status') || Object.keys(req.body).includes('advertisementWelcomeStartDay') || Object.keys(req.body).includes('advertisementWelcomeEndDay')) {
+                body.advertisement_update_time = new Date().toISOString();
             }
 
-            if(Object.keys(req.body).includes('menu_subject_line') || Object.keys(req.body).includes('menu_input_text') || Object.keys(extraBody).includes('menu_picture_1') || Object.keys(extraBody).includes('menu_picture_2') || Object.keys(req.body).includes('menu_feed_show_status') || Object.keys(req.body).includes('menuWelcomeStartDay') || Object.keys(req.body).includes('menuWelcomeEndDay')){
-                    body.menu_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('menu_subject_line') || Object.keys(req.body).includes('menu_input_text') || Object.keys(extraBody).includes('menu_picture_1') || Object.keys(extraBody).includes('menu_picture_2') || Object.keys(req.body).includes('menu_feed_show_status') || Object.keys(req.body).includes('menuWelcomeStartDay') || Object.keys(req.body).includes('menuWelcomeEndDay')) {
+                body.menu_update_time = new Date().toISOString();
             }
-            if(Object.keys(req.body).includes('info_subject_line') || Object.keys(req.body).includes('info_input_text') || Object.keys(extraBody).includes('info_picture_1') || Object.keys(extraBody).includes('info_picture_2') || Object.keys(req.body).includes('info_feed_show_status') || Object.keys(req.body).includes('infoWelcomeStartDay') || Object.keys(req.body).includes('infoWelcomeEndDay')){
-                    body.info_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('info_subject_line') || Object.keys(req.body).includes('info_input_text') || Object.keys(extraBody).includes('info_picture_1') || Object.keys(extraBody).includes('info_picture_2') || Object.keys(req.body).includes('info_feed_show_status') || Object.keys(req.body).includes('infoWelcomeStartDay') || Object.keys(req.body).includes('infoWelcomeEndDay')) {
+                body.info_update_time = new Date().toISOString();
             }
-            if(Object.keys(req.body).includes('event_subject_line') || Object.keys(req.body).includes('event_input_text') || Object.keys(extraBody).includes('event_picture_1') || Object.keys(extraBody).includes('event_picture_2') || Object.keys(req.body).includes('event_feed_show_status') || Object.keys(req.body).includes('eventWelcomeStartDay') || Object.keys(req.body).includes('eventWelcomeEndDay')){
-                    body.event_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('event_subject_line') || Object.keys(req.body).includes('event_input_text') || Object.keys(extraBody).includes('event_picture_1') || Object.keys(extraBody).includes('event_picture_2') || Object.keys(req.body).includes('event_feed_show_status') || Object.keys(req.body).includes('eventWelcomeStartDay') || Object.keys(req.body).includes('eventWelcomeEndDay')) {
+                body.event_update_time = new Date().toISOString();
             }
-            if(Object.keys(req.body).includes('advertising_video_subject_line') || Object.keys(req.body).includes('advertising_video_input_text') || Object.keys(extraBody).includes('advertising_video_picture_1') || Object.keys(extraBody).includes('advertising_video_picture_2') || Object.keys(req.body).includes('advertising_video_feed_show_status') || Object.keys(req.body).includes('advertisingVideoWelcomeStartDay') || Object.keys(req.body).includes('advertisingVideoWelcomeEndDay')){
-                    body.advertising_video_update_time = new Date().toISOString();
+            if (Object.keys(req.body).includes('advertising_video_subject_line') || Object.keys(req.body).includes('advertising_video_input_text') || Object.keys(extraBody).includes('advertising_video_picture_1') || Object.keys(extraBody).includes('advertising_video_picture_2') || Object.keys(req.body).includes('advertising_video_feed_show_status') || Object.keys(req.body).includes('advertisingVideoWelcomeStartDay') || Object.keys(req.body).includes('advertisingVideoWelcomeEndDay')) {
+                body.advertising_video_update_time = new Date().toISOString();
             }
-           
+
             let id = body.id
-        
+
 
             delete body.id
 
@@ -524,7 +524,7 @@ router.post('/updateUser', validation, async (req, res) => {
 router.post('/addPRFeedData', validation, async (req, res) => {
     let resBody = {
         result: [],
-        data:{},
+        data: {},
         msg: "PRFeed added successfully!",
         status: false
     }
@@ -553,11 +553,11 @@ router.post('/addPRFeedData', validation, async (req, res) => {
                     extraBody[i.fieldname] = { ...i, _id: id, url: "/files/" + i.filename }
                     delete extraBody[i.fieldname].fieldname
                 })
-            }         
-          
-    
-            let { data, error } = await db.updateOneData(ProviderModel,{_id:req.body.providerId}, {$push:{PRFeedData:{ ...req.body,update_time:new Date().toISOString(), ...extraBody }}})
-            let getData = await ProviderModel.findOne({_id:req.body.providerId});
+            }
+
+
+            let { data, error } = await db.updateOneData(ProviderModel, { _id: req.body.providerId }, { $push: { PRFeedData: { ...req.body, update_time: new Date().toISOString(), ...extraBody } } })
+            let getData = await ProviderModel.findOne({ _id: req.body.providerId });
 
             if (error === null) {
                 resBody.status = true
@@ -566,7 +566,7 @@ router.post('/addPRFeedData', validation, async (req, res) => {
             } else {
                 resBody.msg = error.message
             }
-                
+
 
         } catch (e) {
             // console.log("Error", e)
@@ -580,17 +580,17 @@ router.post('/addPRFeedData', validation, async (req, res) => {
 
         res.send(JSON.stringify(resBody))
     })
- 
+
 });
 router.post('/editPRFeedData', validation, async (req, res) => {
     let resBody = {
         result: [],
-        data:{},
+        data: {},
         msg: "PRFeed updated successfully!",
         status: false
     }
     upload(req, res, async (err) => {
-        
+
         try {
 
             if (err instanceof multer.MulterError) {
@@ -615,30 +615,32 @@ router.post('/editPRFeedData', validation, async (req, res) => {
                     extraBody[i.fieldname] = { ...i, _id: id, url: "/files/" + i.filename }
                     delete extraBody[i.fieldname].fieldname
                 })
-            }         
-          
-    
+            }
+
+
             // let { data, error } = await db.updateOneData(ProviderModel,{_id:req.body.providerId,"PRFeedData._id":req.body.PRFeedId}, {PRFeedData:{ ...req.body, ...extraBody }})
-            let updateData = await ProviderModel.updateOne({_id:req.body.providerId,"PRFeedData._id":req.body.PRFeedId},{$set:{
-                "PRFeedData.$.subject_line":req.body.subject_line,
-                "PRFeedData.$.input_text":req.body.input_text,
-                "PRFeedData.$.feed_show_status":req.body.feed_show_status,
-                "PRFeedData.$.picture_1":extraBody.picture_1,
-                "PRFeedData.$.picture_2":extraBody.picture_2,
-                "PRFeedData.$.post_start_date":req.body.post_start_date,
-                "PRFeedData.$.post_end_date":req.body.post_end_date,
-                "PRFeedData.$.update_time":new Date().toISOString(),
-            }})
-            let getData = await ProviderModel.findOne({_id:req.body.providerId});
+            let updateData = await ProviderModel.updateOne({ _id: req.body.providerId, "PRFeedData._id": req.body.PRFeedId }, {
+                $set: {
+                    "PRFeedData.$.subject_line": req.body.subject_line,
+                    "PRFeedData.$.input_text": req.body.input_text,
+                    "PRFeedData.$.feed_show_status": req.body.feed_show_status,
+                    "PRFeedData.$.picture_1": extraBody.picture_1,
+                    "PRFeedData.$.picture_2": extraBody.picture_2,
+                    "PRFeedData.$.post_start_date": req.body.post_start_date,
+                    "PRFeedData.$.post_end_date": req.body.post_end_date,
+                    "PRFeedData.$.update_time": new Date().toISOString(),
+                }
+            })
+            let getData = await ProviderModel.findOne({ _id: req.body.providerId });
 
             // if (error === null) {
-                resBody.status = true
-                resBody.result = [updateData]
-                resBody.data=getData
+            resBody.status = true
+            resBody.result = [updateData]
+            resBody.data = getData
             // } else {
             //     resBody.msg = error.message
             // }
-                
+
 
         } catch (e) {
             // console.log("Error", e)
@@ -652,30 +654,30 @@ router.post('/editPRFeedData', validation, async (req, res) => {
 
         res.send(JSON.stringify(resBody))
     })
- 
+
 });
 router.post('/deletePRFeedData', validation, async (req, res) => {
     let resBody = {
         result: [],
-        data:{},
+        data: {},
         msg: "PRFeed deleted successfully!",
         status: false
     }
     upload(req, res, async (err) => {
         try {
 
-        
-            let { data, error } = await db.updateOneData(ProviderModel,{_id:req.body.providerId}, {$pull:{PRFeedData:{_id:req.body.PRFeedId}}})
-            let getData = await ProviderModel.findOne({_id:req.body.providerId});
+
+            let { data, error } = await db.updateOneData(ProviderModel, { _id: req.body.providerId }, { $pull: { PRFeedData: { _id: req.body.PRFeedId } } })
+            let getData = await ProviderModel.findOne({ _id: req.body.providerId });
 
             if (error === null) {
                 resBody.status = true
                 resBody.result = [data]
-                resBody.data=getData
+                resBody.data = getData
             } else {
                 resBody.msg = error.message
             }
-                
+
 
         } catch (e) {
             // console.log("Error", e)
@@ -689,7 +691,7 @@ router.post('/deletePRFeedData', validation, async (req, res) => {
 
         res.send(JSON.stringify(resBody))
     })
- 
+
 });
 
 router.post('/deleteOneUser', validation, async (req, res) => {
@@ -734,7 +736,7 @@ router.get('/getOneUser/:id', async (req, res) => {
         var id = new ObjectId(req.params.id);
 
         let { data, error } = await db.getData(ProviderModel, { _id: id, deactivate: false }, {
-            _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1, iswelcome: 1, community: 1, description: 1, Imprint: 1,companyPresentationpdf:"$companyPresentationpdf.url",jobAdvertisementpdf:"$jobAdvertisementpdf.url",flyerpdf:"$flyerpdf.url",advertisementpdf:"$advertisementpdf.url",menupdf:"$menupdf.url",infopdf:"$infopdf.url",eventpdf:"$eventpdf.url"
+            _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1, iswelcome: 1, community: 1, description: 1, Imprint: 1, companyPresentationpdf: "$companyPresentationpdf.url", jobAdvertisementpdf: "$jobAdvertisementpdf.url", flyerpdf: "$flyerpdf.url", advertisementpdf: "$advertisementpdf.url", menupdf: "$menupdf.url", infopdf: "$infopdf.url", eventpdf: "$eventpdf.url"
         })
 
         console.log(data, error)
@@ -765,13 +767,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v1 = { companyPresentationStartDay: data[i].companyPresentationStartDay, companyPresentationEndDay: data[i].companyPresentationEndDay, url: data[i].companyPresentation, title: 'Firmenpräsentation', type: type,pdf_type:data[i].companyPresentationpdf?true:false,pdfuri:data[i].companyPresentationpdf?'https://www.mein-vendoapp.de:3001'+data[i].companyPresentationpdf:'' }
-                        
+                        v1 = { companyPresentationStartDay: data[i].companyPresentationStartDay, companyPresentationEndDay: data[i].companyPresentationEndDay, url: data[i].companyPresentation, title: 'Firmenpräsentation', type: type, pdf_type: data[i].companyPresentationpdf ? true : false, pdfuri: data[i].companyPresentationpdf ? 'https://www.mein-vendoapp.de:3001' + data[i].companyPresentationpdf : '' }
+
                     }
                 }
                 if (data[i].advertisement) {
@@ -787,13 +789,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v2 = { advertisementStartDay: data[i].advertisementStartDay, advertisementEndDay: data[i].advertisementEndDay, url: data[i].advertisement, title: 'Anzeige', type: type,pdf_type:data[i].advertisementpdf?true:false,pdfuri:data[i].advertisementpdf?'https://www.mein-vendoapp.de:3001'+data[i].advertisementpdf:'' }
-                        
+                        v2 = { advertisementStartDay: data[i].advertisementStartDay, advertisementEndDay: data[i].advertisementEndDay, url: data[i].advertisement, title: 'Anzeige', type: type, pdf_type: data[i].advertisementpdf ? true : false, pdfuri: data[i].advertisementpdf ? 'https://www.mein-vendoapp.de:3001' + data[i].advertisementpdf : '' }
+
                     }
                 }
                 if (data[i].flyer) {
@@ -809,13 +811,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v3 = { flyerStartDay: data[i].flyerStartDay, flyerEndDay: data[i].flyerEndDay, url: data[i].flyer, title: 'Flyer', type: type,pdf_type:data[i].flyerpdf?true:false,pdfuri:data[i].flyerpdf?'https://www.mein-vendoapp.de:3001'+data[i].flyerpdf:'' }
-                        
+                        v3 = { flyerStartDay: data[i].flyerStartDay, flyerEndDay: data[i].flyerEndDay, url: data[i].flyer, title: 'Flyer', type: type, pdf_type: data[i].flyerpdf ? true : false, pdfuri: data[i].flyerpdf ? 'https://www.mein-vendoapp.de:3001' + data[i].flyerpdf : '' }
+
                     }
                 }
                 if (data[i].jobAdvertisement) {
@@ -831,12 +833,12 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v4 = { jobAdvertisementStartDay: data[i].jobAdvertisementStartDay, jobAdvertisementEndDay: data[i].jobAdvertisementEndDay, url: data[i].jobAdvertisement, title: 'Stellenangebot', type: type,pdf_type:data[i].jobAdvertisementpdf?true:false,pdfuri:data[i].jobAdvertisementpdf?'https://www.mein-vendoapp.de:3001'+data[i].jobAdvertisementpdf:'' }
+                        v4 = { jobAdvertisementStartDay: data[i].jobAdvertisementStartDay, jobAdvertisementEndDay: data[i].jobAdvertisementEndDay, url: data[i].jobAdvertisement, title: 'Stellenangebot', type: type, pdf_type: data[i].jobAdvertisementpdf ? true : false, pdfuri: data[i].jobAdvertisementpdf ? 'https://www.mein-vendoapp.de:3001' + data[i].jobAdvertisementpdf : '' }
                     }
                 }
                 if (data[i].menu) {
@@ -852,13 +854,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v5 = { menuStartDay: data[i].menuStartDay, menuEndDay: data[i].menuEndDay, url: data[i].menu, title: 'Speisekarte', type: type,pdf_type:data[i].menupdf?true:false,pdfuri:data[i].menupdf?'https://www.mein-vendoapp.de:3001'+data[i].menupdf:'' }
-                        
+                        v5 = { menuStartDay: data[i].menuStartDay, menuEndDay: data[i].menuEndDay, url: data[i].menu, title: 'Speisekarte', type: type, pdf_type: data[i].menupdf ? true : false, pdfuri: data[i].menupdf ? 'https://www.mein-vendoapp.de:3001' + data[i].menupdf : '' }
+
                     }
                 }
                 if (data[i].info) {
@@ -874,13 +876,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v6 = { infoStartDay: data[i].infoStartDay, infoEndDay: data[i].infoEndDay, url: data[i].info, title: 'Info', type: type,pdf_type:data[i].infopdf?true:false,pdfuri:data[i].infopdf?'https://www.mein-vendoapp.de:3001'+data[i].infopdf:'' }
-                        
+                        v6 = { infoStartDay: data[i].infoStartDay, infoEndDay: data[i].infoEndDay, url: data[i].info, title: 'Info', type: type, pdf_type: data[i].infopdf ? true : false, pdfuri: data[i].infopdf ? 'https://www.mein-vendoapp.de:3001' + data[i].infopdf : '' }
+
                     }
                 }
                 if (data[i].event) {
@@ -896,13 +898,13 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v7 = { eventStartDay: data[i].eventStartDay, eventEndDay: data[i].eventEndDay, url: data[i].event, title: 'Event', type: type,pdf_type:data[i].eventpdf?true:false,pdfuri:data[i].eventpdf?'https://www.mein-vendoapp.de:3001'+data[i].eventpdf:'' }
-                        
+                        v7 = { eventStartDay: data[i].eventStartDay, eventEndDay: data[i].eventEndDay, url: data[i].event, title: 'Event', type: type, pdf_type: data[i].eventpdf ? true : false, pdfuri: data[i].eventpdf ? 'https://www.mein-vendoapp.de:3001' + data[i].eventpdf : '' }
+
                     }
                 }
                 if (data[i].advertisingVideo) {
@@ -918,12 +920,12 @@ router.get('/getOneUser/:id', async (req, res) => {
                         //console.log('f_arr',f_arr);
                         if (f_arr == 'mp4' || f_arr == 'avi' || f_arr == 'wmv' || f_arr == 'flv' || f_arr == 'mkv' || f_arr == 'webm' || f_arr == 'mpeg') {
                             var type = 2;
-                        }else if(f_arr == 'pdf'){
+                        } else if (f_arr == 'pdf') {
                             var type = 3;
                         } else {
                             var type = 1;
                         }
-                        v8 = { advertisingVideoStartDay: data[i].advertisingVideoStartDay, advertisingVideoEndDay: data[i].advertisingVideoEndDay, url: data[i].advertisingVideo, title: 'Werbevideo', type: type,pdf_type:data[i].advertisingvideopdf?true:false,pdfuri:data[i].advertisingvideopdf?'https://www.mein-vendoapp.de:3001'+data[i].advertisingvideopdf:'' }
+                        v8 = { advertisingVideoStartDay: data[i].advertisingVideoStartDay, advertisingVideoEndDay: data[i].advertisingVideoEndDay, url: data[i].advertisingVideo, title: 'Werbevideo', type: type, pdf_type: data[i].advertisingvideopdf ? true : false, pdfuri: data[i].advertisingvideopdf ? 'https://www.mein-vendoapp.de:3001' + data[i].advertisingvideopdf : '' }
                     }
                 }
 
@@ -1029,15 +1031,15 @@ router.get('/getOneUserweb/:id', validation, async (req, res) => {
             event_wishlist_count: 1,
             advertising_video_like_count: 1,
             advertising_video_wishlist_count: 1,
-            companyPresentationpdf:"$companyPresentationpdf.url",
-            jobAdvertisementpdf:"$jobAdvertisementpdf.url",
-            flyerpdf:"$flyerpdf.url",
-            advertisementpdf:"$advertisementpdf.url",
-            menupdf:"$menupdf.url",
-            infopdf:"$infopdf.url",
-            eventpdf:"$eventpdf.url",
-            Abholung:1,
-            Lieferung:1
+            companyPresentationpdf: "$companyPresentationpdf.url",
+            jobAdvertisementpdf: "$jobAdvertisementpdf.url",
+            flyerpdf: "$flyerpdf.url",
+            advertisementpdf: "$advertisementpdf.url",
+            menupdf: "$menupdf.url",
+            infopdf: "$infopdf.url",
+            eventpdf: "$eventpdf.url",
+            Abholung: 1,
+            Lieferung: 1
         })
 
         console.log(data, error)
@@ -1218,13 +1220,13 @@ router.post('/getAllUsersWithLikeCountandWishlistCount/', validation, async (req
         msg: "",
         status: false
     }
-   var like_data = await ProviderLikeRoot.findOne({"provider_id": req.body.provider_id,"user_id":req.body.user_id});
-   var Wishlist_data = await ProviderWishlistRoot.findOne({"provider_id": req.body.provider_id,"user_id":req.body.user_id});
-    var provider_doc = await ProviderModel.findOne({ _id:req?.body?.provider_id });
-   
+    var like_data = await ProviderLikeRoot.findOne({ "provider_id": req.body.provider_id, "user_id": req.body.user_id });
+    var Wishlist_data = await ProviderWishlistRoot.findOne({ "provider_id": req.body.provider_id, "user_id": req.body.user_id });
+    var provider_doc = await ProviderModel.findOne({ _id: req?.body?.provider_id });
+
     if (provider_doc) {
         resBody.status = true
-        resBody.result = {...provider_doc.toObject(),myLike:like_data?true:false,myWish:Wishlist_data?true:false}
+        resBody.result = { ...provider_doc.toObject(), myLike: like_data ? true : false, myWish: Wishlist_data ? true : false }
     } else {
         resBody.status = false
         resBody.msg = 'No data found'
@@ -1238,15 +1240,15 @@ router.post('/getMyWishList/', validation, async (req, res) => {
         status: true
     }
     var hostname = req.headers.host
-//    var like_data = await ProviderLikeRoot.find({"user_id":req.body.user_id});
-   var Wishlist_data = await ProviderWishlistRoot.find({"user_id":req.body.user_id});
-   for (let index = 0; index < Wishlist_data.length; index++) {
-    // console.log(Wishlist_data[index].,"LLLLLLLLLLLLLLLLLLLLLLLLLL")
-    var provider_doc = await ProviderModel.findOne({ _id:Wishlist_data[index].provider_id });
-     resBody.result.push({...provider_doc.toObject(),logo:'https://'+hostname+provider_doc?.logo?.url})
-   }
-    
-   
+    //    var like_data = await ProviderLikeRoot.find({"user_id":req.body.user_id});
+    var Wishlist_data = await ProviderWishlistRoot.find({ "user_id": req.body.user_id });
+    for (let index = 0; index < Wishlist_data.length; index++) {
+        // console.log(Wishlist_data[index].,"LLLLLLLLLLLLLLLLLLLLLLLLLL")
+        var provider_doc = await ProviderModel.findOne({ _id: Wishlist_data[index].provider_id });
+        resBody.result.push({ ...provider_doc.toObject(), logo: 'https://' + hostname + provider_doc?.logo?.url })
+    }
+
+
     if (provider_doc) {
         resBody.status = true
         resBody.result = resBody.result
@@ -1291,7 +1293,7 @@ router.get('/getPrivacyPolicy/', async (req, res) => {
     res.send(JSON.stringify(resBody))
 });
 
-router.post('/update_time_post',async(req,res)=>{
+router.post('/update_time_post', async (req, res) => {
     let resBody = {
         result: [],
         msg: "",

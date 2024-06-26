@@ -480,9 +480,51 @@ router.get("/getCardsForUser/:id", async (req, res) => {
         },
       ]
     );
-    console.log("Active cards", activeCards);
+    let mydata = []
+    redeemedCards.data.forEach(element => {
+      let obj = {}
+      obj._id = element._id
+      obj.vendorId = element.providerId._id
+      obj.providerName  = element.providerId.providerName
+      obj.address  = element.providerId.address
+      obj.region = element.providerId.region
+      obj.logo = element.providerId.logo.filename
+      obj.cardId = element.cardId._id
+      obj.maxPoints = element.cardId.maxPoints
+      obj.details = element.cardId.details
+      obj.validUntil = element.cardId.validUntil
+      obj.status = element.status
+      obj.points  =  element.points
+      obj.createdAt = element.createdAt
+      obj.updatedAt = element.updatedAt
+      obj.redeemed = element.redeemed
+      mydata.push(obj)
 
-    res.json({ status: true, result: { redeemedCards, activeCards } });
+    });
+
+    let mydata2 = []
+    activeCards.data.forEach(element => {
+      let obj = {}
+      obj._id = element._id
+      obj.vendorId = element.providerId._id
+      obj.providerName  = element.providerId.providerName
+      obj.address  = element.providerId.address
+      obj.region = element.providerId.region
+      obj.logo = element.providerId.logo.filename
+      obj.cardId = element.cardId._id
+      obj.maxPoints = element.cardId.maxPoints
+      obj.details = element.cardId.details
+      obj.validUntil = element.cardId.validUntil
+      obj.status = element.status
+      obj.points  =  element.points
+      obj.createdAt = element.createdAt
+      obj.updatedAt = element.updatedAt
+      obj.redeemed = element.redeemed
+      mydata2.push(obj)
+
+    });
+    
+    res.json({ status: true, result: { redeemedCards:mydata, activeCards:mydata2 } });
   } catch (error) {
     console.log("Error", error);
     res.json({ status: false, msg: "Something went wrong: " + error });
