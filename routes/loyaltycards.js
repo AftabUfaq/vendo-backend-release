@@ -78,7 +78,7 @@ router.post("/createCard", validation, async (req, res) => {
 });
 
 router.put("/updateCardById", validation, async (req, res) => {
-  const { _id, maxPoints, status, qrCodes } = req.body;
+  const { _id, maxPoints, status,details, qrCodes } = req.body;
   try {
     let doesCardExist = await db.getData(LoyaltyCard, {
       _id: ObjectId(_id),
@@ -93,6 +93,7 @@ router.put("/updateCardById", validation, async (req, res) => {
     let cardUpateFields = {};
     if (maxPoints) cardUpateFields.maxPoints = maxPoints;
     if (status) cardUpateFields.status = status;
+    if (details) cardUpateFields.details = details;
     const result = await db.updateOneData(
       LoyaltyCard,
       {
@@ -216,6 +217,32 @@ router.delete("/deleteCardById/:id", validation, async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
+
+// update qr code
+router.post("/updateQrCode", validation, async (req, res) => {
+  const { _id, status } = req.body;
+  console.log(req.body, _id);
+  try {
+    const result = await db.updateOneData(
+      Qrcode,
+      {
+        _id: ObjectId(_id),
+      },
+      {
+        status: status,
+      }
+    );
+
+    console.log(result);
+    res.json({
+      status: true,
+      msg: "Qr code updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+})
 
 // functions for the following route\
 // check if user has reached the daily limit
@@ -351,6 +378,7 @@ router.post("/claimQrCode", async (req, res) => {
         let data = await db.getData(LoyaltyCard, {
           _id: ObjectId(cardId),
         });
+        console.log("======> vendorId", data.data[0].vendorId);
         let createLog = await db.insertOneData(cardLogs, {
           userId: ObjectId(userId),
           cardId: ObjectId(cardId),
@@ -359,7 +387,6 @@ router.post("/claimQrCode", async (req, res) => {
           points: qrCode.points,
           redeemed: false,
         });
-        console.log("======> Created card log", createLog);
         // create qr log
         await db.insertOneData(qrLogs, {
           cardLogId: ObjectId(createLog._id),
@@ -375,117 +402,129 @@ router.post("/claimQrCode", async (req, res) => {
         });
       }
     } else if (userCards.length > 0) {
-      const i = userCards.findIndex(
-        (userCard) => userCard._id.toString() === cardId.toString()
-      );
-
-      if (i > -1) {
-        let userCard = userCards[i];
-        
-        let cardDetails = await db.getData(LoyaltyCard, {
-          _id: ObjectId(userCard),
-        });
-        let existingPointsInCard = await db.getData(cardLogs, {
-          userId: ObjectId(userId),
-          cardId: ObjectId(userCard),
-          redeemed: false,
-        });
-        console.log(existingPointsInCard, "existingPointsInCard");
-        let points = qrCode.points;
-        let maxPoints = cardDetails.data[0].maxPoints;
-        let existingPoints = existingPointsInCard.data[0].points;
-        console.log(existingPoints, points, maxPoints, "1st condition");
-        console.log(existingPoints, points, maxPoints, "2nd condition");
-        console.log(existingPoints, points, maxPoints, "3rd condition");
-
-        if (existingPoints + points == maxPoints) {
-          // card can be  completed
-          console.log("======> User can complete card");
-          existingPointsInCard.data[0].status = "complete";
-          existingPointsInCard.data[0].save();
-          // insert qr logs
-          await db.insertOneData(qrLogs, {
-            cardLogId: existingPointsInCard.data[0]._id,
-            userId: ObjectId(userId),
-          });
-          return res.json({
-            status: "success",
-            msg: `${points} points added to your card.`,
-          });
-        } else if (existingPoints + points < maxPoints) {
-          // card points can be added
-          console.log("======> User can add points to card");
-          existingPointsInCard.data[0].points = existingPoints + points;
-          existingPointsInCard.data[0].save();
-          // insert qr logs
-          await db.insertOneData(qrLogs, {
-            cardLogId: existingPointsInCard.data[0]._id,
-            userId: ObjectId(userId),
-          });
-          return res.json({
-            status: "success",
-            msg: `${points} points added to your card.`,
-          });
-        } else if (existingPoints + points > maxPoints) {
+      // check if the user have already this card with some points
+      for (let userCard of userCards) {
+        console.log(
+          "======> User already have cards",
+          userCard._id.toString(),
+          cardId
+        );
+        if (
+          userCard._id.toString() === cardId &&
+          userCard.status !== "complete"
+        ) {
           console.log(
-            "======> User can complete card and also add another card"
+            "======> User already have this card",
+            userCard._id.toString()
           );
-          let remainingPoints = existingPoints + points - maxPoints;
-          existingPointsInCard.data[0].points = maxPoints;
-          existingPointsInCard.data[0].save();
-          // insert qr logs
-          await db.insertOneData(qrLogs, {
-            cardLogId: existingPointsInCard.data[0]._id,
+          // working till here ===========
+          // in case the user have the card but not yet completed it
+          let cardDetails = await db.getData(LoyaltyCard, {
+            _id: ObjectId(userCard),
+          });
+          let existingPointsInCard = await db.getData(cardLogs, {
             userId: ObjectId(userId),
-          });
-          // Create a new card for remaining points if any
-          if (remainingPoints > 0) {
-            const data = await db.getData(LoyaltyCard, {
-              _id: ObjectId(cardId),
-            });
-            await db.insertOneData(cardLogs, {
-              cardId: ObjectId(cardId),
-              userId: ObjectId(userId),
-              providerId: ObjectId(data.data[0].vendorId),
-              status: remainingPoints == maxPoints ? "complete" : "incomplete",
-              points: remainingPoints,
-              redeemed: false,
-            });
-          }
-          return res.json({
-            status: "success",
-            msg: `${points} points added to your card.`,
-          });
-        }
-      } else {
-        if (globalCardUsable) {
-          let data = await db.getData(LoyaltyCard, {
-            _id: ObjectId(cardId),
-          });
-          console.log("======> vendorId", data.data[0].vendorId);
-          // create card log
-          let createLog = await db.insertOneData(cardLogs, {
-            userId: ObjectId(userId),
-            cardId: ObjectId(cardId),
-            providerId: ObjectId(data.data[0].vendorId),
-            status: "incomplete",
-            points: qrCode.points,
+            cardId: ObjectId(userCard),
             redeemed: false,
           });
-          console.log("======> Created card log", createLog);
-          // create qr log
-          await db.insertOneData(qrLogs, {
-            cardLogId: ObjectId(createLog._id),
-            userId: ObjectId(userId),
-          });
+          let points = qrCode.points;
+          let maxPoints = cardDetails.data[0].maxPoints;
+          let existingPoints = existingPointsInCard.data[0].points;
+          console.log(existingPoints, points, maxPoints, "1st condition");
+          console.log(existingPoints, points, maxPoints, "2nd condition");
+          console.log(existingPoints, points, maxPoints, "3rd condition");
 
-          // add the card id to the user
-          user.loyaltyCards.push(ObjectId(cardId));
-          user.save();
-          return res.json({
-            status: "success",
-            msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
-          });
+          if (existingPoints + points == maxPoints) {
+            // card can be  completed
+            console.log("======> User can complete card");
+            existingPointsInCard.data[0].status = "complete";
+            existingPointsInCard.data[0].save();
+            // insert qr logs
+            await db.insertOneData(qrLogs, {
+              cardLogId: existingPointsInCard.data[0]._id,
+              userId: ObjectId(userId),
+            });
+            return res.json({
+              status: "success",
+              msg: `${points} points added to your card.`,
+            });
+          } else if (existingPoints + points < maxPoints) {
+            // card points can be added
+            console.log("======> User can add points to card");
+            existingPointsInCard.data[0].points = existingPoints + points;
+            existingPointsInCard.data[0].save();
+            // insert qr logs
+            await db.insertOneData(qrLogs, {
+              cardLogId: existingPointsInCard.data[0]._id,
+              userId: ObjectId(userId),
+            });
+            return res.json({
+              status: "success",
+              msg: `${points} points added to your card.`,
+            });
+          } else if (existingPoints + points > maxPoints) {
+            console.log(
+              "======> User can complete card and also add another card"
+            );
+            let remainingPoints = existingPoints + points - maxPoints;
+            existingPointsInCard.data[0].points = maxPoints;
+            existingPointsInCard.data[0].save();
+            // insert qr logs
+            await db.insertOneData(qrLogs, {
+              cardLogId: existingPointsInCard.data[0]._id,
+              userId: ObjectId(userId),
+            });
+            // Create a new card for remaining points if any
+            if (remainingPoints > 0) {
+              const data = await db.getData(LoyaltyCard, {
+                _id: ObjectId(cardId),
+              });
+              console.log("======> vendorId", data.data[0].vendorId);
+              await db.insertOneData(cardLogs, {
+                cardId: ObjectId(cardId),
+                userId: ObjectId(userId),
+                providerId: ObjectId(data.data[0].vendorId),
+                status:
+                  remainingPoints == maxPoints ? "complete" : "incomplete",
+                points: remainingPoints,
+                redeemed: false,
+              });
+            }
+            return res.json({
+              status: "success",
+              msg: `${points} points added to your card.`,
+            });
+          }
+        } else {
+          if (globalCardUsable) {
+            let data = await db.getData(LoyaltyCard, {
+              _id: ObjectId(cardId),
+            });
+            console.log("======> vendorId", data.data[0].vendorId);
+            // create card log
+            let createLog = await db.insertOneData(cardLogs, {
+              userId: ObjectId(userId),
+              cardId: ObjectId(cardId),
+              providerId: ObjectId(data.data[0].vendorId),
+              status: "incomplete",
+              points: qrCode.points,
+              redeemed: false,
+            });
+            console.log("======> Created card log", createLog);
+            // create qr log
+            await db.insertOneData(qrLogs, {
+              cardLogId: ObjectId(createLog._id),
+              userId: ObjectId(userId),
+            });
+
+            // add the card id to the user
+            user.loyaltyCards.push(ObjectId(cardId));
+            user.save();
+            return res.json({
+              status: "success",
+              msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
+            });
+          }
         }
       }
     }
@@ -560,4 +599,29 @@ router.get("/getCardsForUser/:id", async (req, res) => {
   }
 });
 
+// redeem card by Id
+router.get("/redeemCardById/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    let result = await db.updateOneData(
+      cardLogs,
+      {
+        _id: ObjectId(id),
+      },
+      {
+        redeemed: true,
+      }
+    );
+    if (result) {
+      return res.json({
+        status: true,
+        result,
+        msg: "Card redeemed successfully",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+});
 module.exports = router;
