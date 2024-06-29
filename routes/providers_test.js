@@ -1199,7 +1199,7 @@ router.get('/getAllUsersWithLimit/', async (req, res) => {
         }, 4)
 
 
-        console.log('data', data);
+ 
         if (error === null) {
             resBody.status = true
             resBody.result = data
