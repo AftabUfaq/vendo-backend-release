@@ -1864,7 +1864,7 @@ router.get("/getAllUsersWithLimit/", validation, async (req, res) => {
     console.log("data", data);
     if (error === null) {
       resBody.status = true;
-      resBody.result = data;
+      resBody.result = data.reverse();
     } else {
       resBody.msg = error.message;
     }
