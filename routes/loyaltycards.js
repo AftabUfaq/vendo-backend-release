@@ -624,4 +624,66 @@ router.get("/redeemCardById/:id", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
+
+router.post("/cardSubscribedByUser", async (req, res) => {
+  const { cardId, userId } = req.body;
+  try {
+    let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
+      userId: ObjectId(userId),
+      status: "incomplete",
+      cardId: ObjectId(cardId),
+    })
+
+    let cardDetails= await db.getData(LoyaltyCard, {
+      _id: ObjectId(cardId),
+    })
+
+    let vendorId= cardDetails.data[0].vendorId;
+
+    let vendorDetails= await db.getData(Provider, {
+      _id: ObjectId(vendorId),
+    })
+
+    if(hasLoyaltyCardIncomplete.data.length > 0){
+      
+      return res.json({ hasCard: true, 
+          details: 
+            {
+              cardId: cardId,
+              vendorId: vendorId, 
+              address: vendorDetails.data[0].address,
+              region: vendorDetails.data[0].region,
+              logo: vendorDetails.data[0].logo,
+              providerName: vendorDetails.data[0].providerName,
+              maxPoints: cardDetails.data[0].maxPoints,
+              status: cardDetails.data[0].status,
+              validUntil: cardDetails.data[0].validUntil,
+              details: cardDetails.data[0].details,
+              createdAt: cardDetails.data[0].createdAt,
+              points: hasLoyaltyCardIncomplete.data[0].points
+            } 
+          });
+    }
+
+    
+    return res.json({ hasCard: false, details: {
+      cardId: cardId,
+      vendorId: vendorId, 
+      address: vendorDetails.data[0].address,
+      region: vendorDetails.data[0].region,
+      logo: vendorDetails.data[0].logo,
+      providerName: vendorDetails.data[0].providerName,
+      maxPoints: cardDetails.data[0].maxPoints,
+      status: cardDetails.data[0].status,
+      validUntil: cardDetails.data[0].validUntil,
+      details: cardDetails.data[0].details,
+      createdAt: cardDetails.data[0].createdAt
+    } });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+
+  
+});
 module.exports = router;

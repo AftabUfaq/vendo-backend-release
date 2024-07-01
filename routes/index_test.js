@@ -25,18 +25,15 @@ const { sendMail } = require('../system/mail');
 // const { Curl } = require('node-libcurl');
 
 const initfirebase = () => {
-  console.log("init firebase ++++");
-  console.log(serviceAccount)
   const app = !admin.apps.length ? admin.initializeApp({ credential: admin.credential.cert(serviceAccount) }) : admin.app();
-  console.log(app);
+ 
 }
 
 initfirebase();
 
 const validation = (req, res, next) => {
   let token = req.headers["x-request-token"] || null
-  console.log(token)
-  try {
+   try {
     if (token === null) {
       res.send(JSON.stringify({
         result: [],
@@ -46,10 +43,8 @@ const validation = (req, res, next) => {
       return false
     }
     var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
-    console.log(decoded)
     next()
   } catch (err) {
-    console.log(err.message)
     res.send(JSON.stringify({
       result: [],
       msg: err.message || "something went wrong",
