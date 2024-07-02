@@ -610,6 +610,7 @@ router.get("/redeemCardById/:id", async (req, res) => {
       },
       {
         redeemed: true,
+        RedemptionDate: Math.floor(moment().valueOf() / 1000),
       }
     );
     if (result) {
@@ -686,4 +687,65 @@ router.post("/cardSubscribedByUser", async (req, res) => {
 
   
 });
+
+// card remeption reports for a provider
+router.post("/getCardRedemptionReports", async (req, res) => {
+  const { month, id } = req.body;
+
+  // Validate month number
+  if (month < 1 || month > 12) {
+    return res.json({ status: false, msg: "Invalid month number. Please provide a value between 1 and 12." });
+  }
+
+  if (!id) {
+    return res.json({ status: false, msg: "Invalid user id. Please provide a valid user id." });
+  }
+
+  // Define the start and end of the month for the current year as timestamps in milliseconds
+  const startDate = Math.floor(moment().month(month - 1).startOf('month').valueOf() / 1000);
+  const endDate = Math.floor(moment().month(month - 1).endOf('month').valueOf() / 1000);
+
+
+  try {
+    let result = await db.getPopulatedData(
+      cardLogs,
+      {
+        userId: ObjectId(id),
+        redeemed: true,
+        // RedemptionDate: { $gte: startDate, $lte: endDate } // Filter by the date range
+      },
+      [
+        { path: "cardId", select: "maxPoints status details validUntil " },
+        {
+          path: "userId",
+          select: "firstName lastName email phone",
+        },
+      ]
+    );
+
+    
+    // timestampToCheck >= startTimestamp && timestampToCheck <= endTimestamp;
+    result= result.data.filter(item => item.RedemptionDate > startDate && item.RedemptionDate < endDate);
+
+    if (result.length  < 1) {
+      return res.json({ status: false, msg: "No data found" });
+    }
+
+
+
+    // Create array of objects
+    let dataForResponse = result.map(item => ({
+      BonusCardId: item.cardId._id,
+      ProviderId: item.userId._id,
+      CardDescription: item.cardId.details,
+      RedemptionDate: moment.unix(item.RedemptionDate).format('DD/MM/YYYY hh:mm A')
+    }));
+
+    return res.json({ status: true, data: dataForResponse });
+  } catch (error) {
+    console.log("Error", error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+});
+
 module.exports = router;
