@@ -261,7 +261,7 @@ const checkUserDailyLimit = async (userId) => {
     });
 
     console.log(count.data);
-    if (count.data.length >= 5) {
+    if (count.data.length >= 500) {
       return true;
     }
     return false;
