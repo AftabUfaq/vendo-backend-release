@@ -692,13 +692,15 @@ router.post("/cardSubscribedByUser", async (req, res) => {
 router.post("/getCardRedemptionReports", async (req, res) => {
   const { month, id } = req.body;
 
+  console.log(req.body);
+
   // Validate month number
   if (month < 1 || month > 12) {
-    return res.json({ status: false, msg: "Invalid month number. Please provide a value between 1 and 12." });
+    return res.json({ status: false, msg: "Invalid month number. Please provide a value between 1 and 12.", data: [] });
   }
 
   if (!id) {
-    return res.json({ status: false, msg: "Invalid user id. Please provide a valid user id." });
+    return res.json({ status: false, msg: "Invalid user id. Please provide a valid user id.", data: [] });
   }
 
   // Define the start and end of the month for the current year as timestamps in milliseconds
@@ -728,7 +730,7 @@ router.post("/getCardRedemptionReports", async (req, res) => {
     result= result.data.filter(item => item.RedemptionDate > startDate && item.RedemptionDate < endDate);
 
     if (result.length  < 1) {
-      return res.json({ status: false, msg: "No data found" });
+      return res.json({ status: false, data: [] });
     }
 
 
@@ -741,6 +743,7 @@ router.post("/getCardRedemptionReports", async (req, res) => {
       RedemptionDate: moment.unix(item.RedemptionDate).format('DD/MM/YYYY hh:mm A')
     }));
 
+    console.log("dataForResponse", dataForResponse);
     return res.json({ status: true, data: dataForResponse });
   } catch (error) {
     console.log("Error", error);
