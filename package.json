@@ -27,6 +27,8 @@
     "multer": "^1.4.4",
     "node-libcurl": "^4.0.0",
     "nodemailer": "^6.7.3",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "root": "^3.2.0",
+    "serve-static": "^1.15.0"
   }
 }

@@ -3,6 +3,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
+const serveStatic = require('serve-static');
 var createInitialUser = require("./initial-admin");
 
 createInitialUser();
@@ -41,8 +42,8 @@ app.use(cookieParser());
 app.use(logger("dev"));
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: false, limit: "100mb" }));
-app.use(express.static(path.join(__dirname, "public")));
-//app.use(serveStatic(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, "public")));
+app.use(serveStatic(path.join(__dirname, 'public')));
 app.use("/files", express.static(process.env.FILE_PATH));
 
 app.use("/", indexRouter);
