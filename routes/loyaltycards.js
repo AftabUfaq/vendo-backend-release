@@ -610,6 +610,7 @@ router.get("/redeemCardById/:id", async (req, res) => {
       },
       {
         redeemed: true,
+        RedemptionDate: Math.floor(moment().valueOf() / 1000),
       }
     );
     if (result) {
@@ -624,4 +625,130 @@ router.get("/redeemCardById/:id", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
+
+router.post("/cardSubscribedByUser", async (req, res) => {
+  const { cardId, userId } = req.body;
+  try {
+    let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
+      userId: ObjectId(userId),
+      status: "incomplete",
+      cardId: ObjectId(cardId),
+    })
+
+    let cardDetails= await db.getData(LoyaltyCard, {
+      _id: ObjectId(cardId),
+    })
+
+    let vendorId= cardDetails.data[0].vendorId;
+
+    let vendorDetails= await db.getData(Provider, {
+      _id: ObjectId(vendorId),
+    })
+
+    if(hasLoyaltyCardIncomplete.data.length > 0){
+      
+      return res.json({ hasCard: true, 
+          details: 
+            {
+              cardId: cardId,
+              vendorId: vendorId, 
+              address: vendorDetails.data[0].address,
+              region: vendorDetails.data[0].region,
+              logo: vendorDetails.data[0].logo,
+              providerName: vendorDetails.data[0].providerName,
+              maxPoints: cardDetails.data[0].maxPoints,
+              status: cardDetails.data[0].status,
+              validUntil: cardDetails.data[0].validUntil,
+              details: cardDetails.data[0].details,
+              createdAt: cardDetails.data[0].createdAt,
+              points: hasLoyaltyCardIncomplete.data[0].points
+            } 
+          });
+    }
+
+    
+    return res.json({ hasCard: false, details: {
+      cardId: cardId,
+      vendorId: vendorId, 
+      address: vendorDetails.data[0].address,
+      region: vendorDetails.data[0].region,
+      logo: vendorDetails.data[0].logo,
+      providerName: vendorDetails.data[0].providerName,
+      maxPoints: cardDetails.data[0].maxPoints,
+      status: cardDetails.data[0].status,
+      validUntil: cardDetails.data[0].validUntil,
+      details: cardDetails.data[0].details,
+      createdAt: cardDetails.data[0].createdAt
+    } });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+
+  
+});
+
+// card remeption reports for a provider
+router.post("/getCardRedemptionReports", async (req, res) => {
+  const { month, id } = req.body;
+
+  console.log(req.body);
+
+  // Validate month number
+  if (month < 1 || month > 12) {
+    return res.json({ status: false, msg: "Invalid month number. Please provide a value between 1 and 12.", data: [] });
+  }
+
+  if (!id) {
+    return res.json({ status: false, msg: "Invalid user id. Please provide a valid user id.", data: [] });
+  }
+
+  // Define the start and end of the month for the current year as timestamps in milliseconds
+  const startDate = Math.floor(moment().month(month - 1).startOf('month').valueOf() / 1000);
+  const endDate = Math.floor(moment().month(month - 1).endOf('month').valueOf() / 1000);
+
+
+  try {
+    let result = await db.getPopulatedData(
+      cardLogs,
+      {
+        userId: ObjectId(id),
+        redeemed: true,
+        // RedemptionDate: { $gte: startDate, $lte: endDate } // Filter by the date range
+      },
+      [
+        { path: "cardId", select: "maxPoints status details validUntil " },
+        {
+          path: "userId",
+          select: "firstName lastName email phone",
+        },
+      ]
+    );
+
+    
+    // timestampToCheck >= startTimestamp && timestampToCheck <= endTimestamp;
+    result= result.data.filter(item => item.RedemptionDate > startDate && item.RedemptionDate < endDate);
+
+    if (result.length  < 1) {
+      return res.json({ status: false, data: [] });
+    }
+
+
+
+    // Create array of objects
+    let dataForResponse = result.map(item => ({
+      BonusCardId: item.cardId._id,
+      ProviderId: item.userId._id,
+      CardDescription: item.cardId.details,
+      RedemptionDate: moment.unix(item.RedemptionDate).format('DD/MM/YYYY hh:mm A')
+    }));
+
+    console.log("dataForResponse", dataForResponse);
+    return res.json({ status: true, data: dataForResponse });
+  } catch (error) {
+    console.log("Error", error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+});
+
 module.exports = router;

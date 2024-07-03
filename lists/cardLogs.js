@@ -9,6 +9,7 @@ const cardLogSchema = new Schema(
     status: { type: String },
     points: { type: Number },
     redeemed: { type: Boolean, default: false },
+    RedemptionDate: { type: Number },
   },
   { timestamps: true }
 );
