@@ -118,14 +118,6 @@ router.delete("/deleteCardById/:id", validation, async (req, res) => {
     await db.deleteOne(Qrcode, {
       LoyaltyCard: ObjectId(id),
     });
-    console.log(result);
-    // remove its reference id form providers account
-    // await db.updateOneData(
-    //   Customer,
-    //   // { _id: ObjectId(result.data[0].vendorId) },
-    //   { _id: ObjectId(result.data[0].vendorId) },
-    //   { $pull: { loyaltyCards: ObjectId(id) } }
-    // );
     res.json({
       status: true,
       msg: "Loyalty card deleted successfully",
@@ -531,13 +523,91 @@ router.get("/getCardsForUser/:id", async (req, res) => {
   }
 });
 
-const userCardsContainCardId = (userCards, cardId) => {
-  for (let userCard of userCards) {
-    if (userCard._id.toString() === cardId.toString()) {
-      return true;
-    }
-  }
-  return false;
-};
+router.post("/cardSubscribedByUser", async (req, res) => {
+  const { cardId, userId } = req.body;
+  try {
+    let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
+      userId: ObjectId(userId),
+      cardId: ObjectId(cardId),
+    })
 
+    let cardDetails= await db.getData(LoyaltyCard, {
+      _id: ObjectId(cardId),
+    })
+
+    let vendorId= cardDetails.data[0].vendorId;
+
+    let vendorDetails= await db.getData(Provider, {
+      _id: ObjectId(vendorId),
+    })
+
+    if(hasLoyaltyCardIncomplete.data.length > 0){
+      
+      return res.json({ hasCard: true, 
+          details: 
+            {
+           
+              cardId: cardId,
+              vendorId: vendorId, 
+              address: vendorDetails.data[0].address,
+              region: vendorDetails.data[0].region,
+              logo: vendorDetails.data[0].logo.url,
+              providerName: vendorDetails.data[0].providerName,
+              maxPoints: cardDetails.data[0].maxPoints,
+              status: hasLoyaltyCardIncomplete.data[0].status,
+              validUntil: cardDetails.data[0].validUntil,
+              details: cardDetails.data[0].details,
+              createdAt: cardDetails.data[0].createdAt,
+              points: hasLoyaltyCardIncomplete.data[0].points
+            } 
+          });
+    }
+
+    
+    return res.json({ hasCard: false, details: {
+      cardId: cardId,
+      vendorId: vendorId, 
+      address: vendorDetails.data[0].address,
+      region: vendorDetails.data[0].region,
+      logo: vendorDetails.data[0].logo.url,
+      providerName: vendorDetails.data[0].providerName,
+      maxPoints: cardDetails.data[0].maxPoints,
+      status: "incomplete",
+      validUntil: cardDetails.data[0].validUntil,
+      details: cardDetails.data[0].details,
+      createdAt: cardDetails.data[0].createdAt
+    } });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+
+  
+});
+
+router.get("/redeemCardById/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    let result = await db.updateOneData(
+      cardLogs,
+      {
+        cardId: ObjectId(id),
+      },
+      {
+        redeemed: true,
+        RedemptionDate: Math.floor(moment().valueOf() / 1000),
+      }
+    );
+    if (result) {
+      return res.json({
+        status: true,
+        result,
+        msg: "Card redeemed successfully",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+});
 module.exports = router;
