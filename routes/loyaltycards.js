@@ -325,6 +325,7 @@ router.post("/claimQrCode", async (req, res) => {
     let doesUserExist = await db.getData(Customer, {
       _id: ObjectId(userId),
     });
+    console.log(doesUserExist)
     if (doesUserExist.data.length === 0) {
       return res.json({
         status: false,
@@ -438,6 +439,7 @@ router.post("/claimQrCode", async (req, res) => {
             // card can be  completed
             console.log("======> User can complete card");
             existingPointsInCard.data[0].status = "complete";
+            existingPointsInCard.data[0].points= maxPoints;
             existingPointsInCard.data[0].save();
             // insert qr logs
             await db.insertOneData(qrLogs, {
