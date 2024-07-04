@@ -300,7 +300,8 @@ router.post("/claimQrCode", async (req, res) => {
           cardId: ObjectId(userCard),
           redeemed: false,
         });
-        console.log(existingPointsInCard, "existingPointsInCard");
+       
+        if(existingPointsInCard.data.length > 0){ 
         let points = qrCode.points;
         let maxPoints = cardDetails.data[0].maxPoints;
         let existingPoints = existingPointsInCard.data[0].points;
@@ -335,9 +336,7 @@ router.post("/claimQrCode", async (req, res) => {
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points > maxPoints) {
-          console.log(
-            "======> User can complete card and also add another card"
-          );
+          
           let remainingPoints = existingPoints + points - maxPoints;
           existingPointsInCard.data[0].points = maxPoints;
           existingPointsInCard.data[0].save();
@@ -365,6 +364,31 @@ router.post("/claimQrCode", async (req, res) => {
             msg: `${points} points added to your card.`,
           });
         }
+      }else{
+        let data = await db.getData(LoyaltyCard, {
+          _id: ObjectId(cardId),
+        });
+        
+        // create card log
+        let createLog = await db.insertOneData(cardLogs, {
+          userId: ObjectId(userId),
+          cardId: ObjectId(cardId),
+          providerId: ObjectId(data.data[0].vendorId),
+          status: "incomplete",
+          points: qrCode.points,
+          redeemed: false,
+        });
+        console.log("======> Created card log", createLog);
+        // create qr log
+        await db.insertOneData(qrLogs, {
+          cardLogId: ObjectId(createLog._id),
+          userId: ObjectId(userId),
+        });
+        return res.json({
+          status: "success",
+          msg: `${qrCode.points} points added to your card.`,
+        });
+      }
       } else {
         if (globalCardUsable) {
           let data = await db.getData(LoyaltyCard, {
@@ -528,7 +552,7 @@ router.post("/cardSubscribedByUser", async (req, res) => {
     let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
       userId: ObjectId(userId),
       cardId: ObjectId(cardId),
-      status:"incomplete"
+      redeemed:false
     })
 
     let cardDetails= await db.getData(LoyaltyCard, {
