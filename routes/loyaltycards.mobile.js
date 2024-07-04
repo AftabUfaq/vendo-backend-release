@@ -634,4 +634,30 @@ router.get("/redeemCardById/:id", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
+
+router.delete("/deleteCardLogById/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    let doesCardExist = await db.getData(cardLogs, {
+      _id: ObjectId(id),
+    })
+    console.log(doesCardExist)
+    if (doesCardExist.data.length == 0) {
+      return res.json({ status: false, msg: "Card does not exist" });
+    }
+    const result = await db.deleteOne(cardLogs, {
+      _id: ObjectId(id),
+    });
+
+    console.log(result);
+    res.json({
+      status: true,
+      msg: "Card log deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+});
+
 module.exports = router;
