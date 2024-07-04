@@ -714,7 +714,7 @@ router.post("/getCardRedemptionReports", async (req, res) => {
     let result = await db.getPopulatedData(
       cardLogs,
       {
-        userId: ObjectId(id),
+        providerId: ObjectId(id),
         redeemed: true,
         // RedemptionDate: { $gte: startDate, $lte: endDate } // Filter by the date range
       },
@@ -732,7 +732,7 @@ router.post("/getCardRedemptionReports", async (req, res) => {
     result= result.data.filter(item => item.RedemptionDate > startDate && item.RedemptionDate < endDate);
 
     if (result.length  < 1) {
-      return res.json({ status: false, data: [] });
+      return res.json({ status: false, data: [],startDate,endDate, });
     }
 
 
@@ -740,7 +740,7 @@ router.post("/getCardRedemptionReports", async (req, res) => {
     // Create array of objects
     let dataForResponse = result.map(item => ({
       BonusCardId: item.cardId._id,
-      ProviderId: item.userId._id,
+      ProviderId: id,
       CardDescription: item.cardId.details,
       RedemptionDate: moment.unix(item.RedemptionDate).format('DD/MM/YYYY hh:mm A')
     }));

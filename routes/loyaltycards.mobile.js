@@ -221,7 +221,7 @@ router.post("/claimQrCode", async (req, res) => {
     if (isUserLimited) {
       return res.json({
         status: false,
-        msg: "You have scanned 5 times today. Please come back tomorrow.",
+        msg: "You have scanned 500 times today. Please come back tomorrow.",
       });
     }
     console.log("======> User is not blocked");
@@ -284,13 +284,14 @@ router.post("/claimQrCode", async (req, res) => {
         });
       }
     } else if (userCards.length > 0) {
+      console.log(userCards, );
       const i = userCards.findIndex(
         (userCard) => userCard._id.toString() === cardId.toString()
       );
 
       if (i > -1) {
         let userCard = userCards[i];
-        
+        console.log("THIS iS AN EXISTING CARDS");
         let cardDetails = await db.getData(LoyaltyCard, {
           _id: ObjectId(userCard),
         });
@@ -299,19 +300,17 @@ router.post("/claimQrCode", async (req, res) => {
           cardId: ObjectId(userCard),
           redeemed: false,
         });
-        console.log(existingPointsInCard, "existingPointsInCard");
+       
+        if(existingPointsInCard.data.length > 0){ 
         let points = qrCode.points;
         let maxPoints = cardDetails.data[0].maxPoints;
         let existingPoints = existingPointsInCard.data[0].points;
-        console.log(existingPoints, points, maxPoints, "1st condition");
-        console.log(existingPoints, points, maxPoints, "2nd condition");
-        console.log(existingPoints, points, maxPoints, "3rd condition");
 
         if (existingPoints + points == maxPoints) {
           // card can be  completed
           console.log("======> User can complete card");
           existingPointsInCard.data[0].status = "complete";
-          existingPointsInCard.data[0].points = maxPoints;
+          existingPointsInCard.data[0].points = maxPoints
           existingPointsInCard.data[0].save();
           // insert qr logs
           await db.insertOneData(qrLogs, {
@@ -337,9 +336,7 @@ router.post("/claimQrCode", async (req, res) => {
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points > maxPoints) {
-          console.log(
-            "======> User can complete card and also add another card"
-          );
+          
           let remainingPoints = existingPoints + points - maxPoints;
           existingPointsInCard.data[0].points = maxPoints;
           existingPointsInCard.data[0].save();
@@ -367,6 +364,31 @@ router.post("/claimQrCode", async (req, res) => {
             msg: `${points} points added to your card.`,
           });
         }
+      }else{
+        let data = await db.getData(LoyaltyCard, {
+          _id: ObjectId(cardId),
+        });
+        
+        // create card log
+        let createLog = await db.insertOneData(cardLogs, {
+          userId: ObjectId(userId),
+          cardId: ObjectId(cardId),
+          providerId: ObjectId(data.data[0].vendorId),
+          status: "incomplete",
+          points: qrCode.points,
+          redeemed: false,
+        });
+        console.log("======> Created card log", createLog);
+        // create qr log
+        await db.insertOneData(qrLogs, {
+          cardLogId: ObjectId(createLog._id),
+          userId: ObjectId(userId),
+        });
+        return res.json({
+          status: "success",
+          msg: `${qrCode.points} points added to your card.`,
+        });
+      }
       } else {
         if (globalCardUsable) {
           let data = await db.getData(LoyaltyCard, {
@@ -530,6 +552,7 @@ router.post("/cardSubscribedByUser", async (req, res) => {
     let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
       userId: ObjectId(userId),
       cardId: ObjectId(cardId),
+      redeemed:false
     })
 
     let cardDetails= await db.getData(LoyaltyCard, {
@@ -592,7 +615,7 @@ router.get("/redeemCardById/:id", async (req, res) => {
     let result = await db.updateOneData(
       cardLogs,
       {
-        cardId: ObjectId(id),
+        _id: ObjectId(id),
       },
       {
         redeemed: true,
