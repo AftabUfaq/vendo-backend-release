@@ -284,7 +284,6 @@ router.post("/claimQrCode", async (req, res) => {
         });
       }
     } else if (userCards.length > 0) {
-      console.log(userCards, );
       const i = userCards.findIndex(
         (userCard) => userCard._id.toString() === cardId.toString()
       );
@@ -293,12 +292,13 @@ router.post("/claimQrCode", async (req, res) => {
         let userCard = userCards[i];
         console.log("THIS iS AN EXISTING CARDS");
         let cardDetails = await db.getData(LoyaltyCard, {
-          _id: ObjectId(userCard),
+          _id: ObjectId(cardId),
         });
         let existingPointsInCard = await db.getData(cardLogs, {
           userId: ObjectId(userId),
-          cardId: ObjectId(userCard),
+          cardId: ObjectId(cardId),
           redeemed: false,
+          status: "incomplete",
         });
        
         if(existingPointsInCard.data.length > 0){ 
@@ -318,7 +318,7 @@ router.post("/claimQrCode", async (req, res) => {
             userId: ObjectId(userId),
           });
           return res.json({
-            status: "success",
+            status: "success1",
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points < maxPoints) {
@@ -332,13 +332,14 @@ router.post("/claimQrCode", async (req, res) => {
             userId: ObjectId(userId),
           });
           return res.json({
-            status: "success",
+            status: "success2",
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points > maxPoints) {
           
           let remainingPoints = existingPoints + points - maxPoints;
           existingPointsInCard.data[0].points = maxPoints;
+          existingPointsInCard.data[0].status = "complete";
           existingPointsInCard.data[0].save();
           // insert qr logs
           await db.insertOneData(qrLogs, {
@@ -360,13 +361,14 @@ router.post("/claimQrCode", async (req, res) => {
             });
           }
           return res.json({
-            status: "success",
+            status: "success3",
+            existingPointsInCard:existingPointsInCard,
             msg: `${points} points added to your card.`,
           });
         }
       }else{
         let data = await db.getData(LoyaltyCard, {
-          _id: ObjectId(cardId),
+          _id: ObjectId(cardId)
         });
         
         // create card log
@@ -385,7 +387,7 @@ router.post("/claimQrCode", async (req, res) => {
           userId: ObjectId(userId),
         });
         return res.json({
-          status: "success",
+          status: "success4",
           msg: `${qrCode.points} points added to your card.`,
         });
       }
@@ -415,7 +417,7 @@ router.post("/claimQrCode", async (req, res) => {
           user.loyaltyCards.push(ObjectId(cardId));
           user.save();
           return res.json({
-            status: "success",
+            status: "success5",
             msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
           });
         }
@@ -547,12 +549,13 @@ router.get("/getCardsForUser/:id", async (req, res) => {
 });
 
 router.post("/cardSubscribedByUser", async (req, res) => {
-  const { cardId, userId } = req.body;
+  const { _id, cardId, userId } = req.body;
   try {
     let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
       userId: ObjectId(userId),
       cardId: ObjectId(cardId),
-      redeemed:false
+      redeemed:false,
+      status:"incomplete"
     })
 
     let cardDetails= await db.getData(LoyaltyCard, {
@@ -606,7 +609,69 @@ router.post("/cardSubscribedByUser", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 
-  
+});
+
+
+router.post("/cardSubscribedByUserLog", async (req, res) => {
+  const { _id, cardId, userId } = req.body;
+  try {
+    let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
+      userId: ObjectId(userId),
+      _id: ObjectId(_id),
+      redeemed:false,
+    })
+
+    let cardDetails= await db.getData(LoyaltyCard, {
+      _id: ObjectId(cardId),
+    })
+
+    let vendorId= cardDetails.data[0].vendorId;
+
+    let vendorDetails= await db.getData(Provider, {
+      _id: ObjectId(vendorId),
+    })
+
+    if(hasLoyaltyCardIncomplete.data.length > 0){
+      
+      return res.json({ hasCard: true, 
+          details: 
+            {
+           
+              cardId: cardId,
+              vendorId: vendorId, 
+              address: vendorDetails.data[0].address,
+              region: vendorDetails.data[0].region,
+              logo: vendorDetails.data[0].logo.url,
+              providerName: vendorDetails.data[0].providerName,
+              maxPoints: cardDetails.data[0].maxPoints,
+              status: hasLoyaltyCardIncomplete.data[0].status,
+              validUntil: cardDetails.data[0].validUntil,
+              details: cardDetails.data[0].details,
+              createdAt: cardDetails.data[0].createdAt,
+              points: hasLoyaltyCardIncomplete.data[0].points
+            } 
+          });
+    }
+
+    
+    return res.json({ hasCard: false, details: {
+      cardId: cardId,
+      vendorId: vendorId, 
+      address: vendorDetails.data[0].address,
+      region: vendorDetails.data[0].region,
+      logo: vendorDetails.data[0].logo.url,
+      providerName: vendorDetails.data[0].providerName,
+      maxPoints: cardDetails.data[0].maxPoints,
+      status: "incomplete",
+      validUntil: cardDetails.data[0].validUntil,
+      details: cardDetails.data[0].details,
+      createdAt: cardDetails.data[0].createdAt
+    } });
+  } catch (error) {
+    console.log(error);
+    res.json({ status: false, msg: "Something went wrong: " + error });
+  }
+
 });
 
 router.get("/redeemCardById/:id", async (req, res) => {
