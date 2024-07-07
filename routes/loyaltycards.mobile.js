@@ -318,7 +318,7 @@ router.post("/claimQrCode", async (req, res) => {
             userId: ObjectId(userId),
           });
           return res.json({
-            status: "success1",
+            status: "success",
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points < maxPoints) {
@@ -332,7 +332,7 @@ router.post("/claimQrCode", async (req, res) => {
             userId: ObjectId(userId),
           });
           return res.json({
-            status: "success2",
+            status: "success",
             msg: `${points} points added to your card.`,
           });
         } else if (existingPoints + points > maxPoints) {
@@ -361,7 +361,7 @@ router.post("/claimQrCode", async (req, res) => {
             });
           }
           return res.json({
-            status: "success3",
+            status: "success",
             existingPointsInCard:existingPointsInCard,
             msg: `${points} points added to your card.`,
           });
@@ -387,7 +387,7 @@ router.post("/claimQrCode", async (req, res) => {
           userId: ObjectId(userId),
         });
         return res.json({
-          status: "success4",
+          status: "success",
           msg: `${qrCode.points} points added to your card.`,
         });
       }
@@ -417,7 +417,7 @@ router.post("/claimQrCode", async (req, res) => {
           user.loyaltyCards.push(ObjectId(cardId));
           user.save();
           return res.json({
-            status: "success5",
+            status: "success",
             msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
           });
         }
@@ -443,19 +443,23 @@ router.get("/getCardsForVendor/:id", async (req, res) => {
     ]);
     let mydata = []
     result.forEach(element => {
-      let obj = {}
-      obj._id = element._id
-      obj.vendorId = element.vendorId._id
-      obj.providerName  = element.vendorId.providerName
-      obj.address  = element.vendorId.address
-      obj.region = element.vendorId.region
-      obj.logo = element.vendorId.logo.filename
-      obj.maxPoints  = element.maxPoints
-      obj.status = element.status
-      obj.qrCode  =element.qrCode
-      obj.details  =  element.details
-      obj.valid_until = element.valid_until
-      mydata.push(obj)
+      const currentTimestamp2 = Date.now();
+      const currentTimestamp  = currentTimestamp2/1000
+      if(currentTimestamp < element.validUntil){
+        let obj = {}
+        obj._id = element._id
+        obj.vendorId = element.vendorId._id
+        obj.providerName  = element.vendorId.providerName
+        obj.address  = element.vendorId.address
+        obj.region = element.vendorId.region
+        obj.logo = element.vendorId.logo.filename
+        obj.maxPoints  = element.maxPoints
+        obj.status = element.status
+        obj.qrCode  =element.qrCode
+        obj.details  =  element.details
+        obj.valid_until = element.validUntil
+        mydata.push(obj)
+      }
 
     });
     res.json({ status: true, data: mydata });
@@ -515,6 +519,7 @@ router.get("/getCardsForUser/:id", async (req, res) => {
       obj.createdAt = element.createdAt
       obj.updatedAt = element.updatedAt
       obj.redeemed = element.redeemed
+      obj.RedemptionDate = element.RedemptionDate
       mydata.push(obj)
 
     });
@@ -537,6 +542,7 @@ router.get("/getCardsForUser/:id", async (req, res) => {
       obj.createdAt = element.createdAt
       obj.updatedAt = element.updatedAt
       obj.redeemed = element.redeemed
+      obj.RedemptionDate = null
       mydata2.push(obj)
 
     });
