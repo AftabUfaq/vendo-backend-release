@@ -961,67 +961,6 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
-        status: false,
-    };
-
-    try {
-        const query = { _customer: new ObjectId(req.query.cid) };
-
-        let { data, error } = await db.getPopulatedData(VoucherTransactionModel, query, "_voucher", {
-            _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _providerId: "$_provider"
-        }, {
-            _id: 0, id: "$_id", _voucherId: "$_voucher", _customer: 1, timestamp: 1, quantity: 1, status: 1, redeemed: 1, redeemedTimestamp: 1, _providerId: "$_provider"
-        })
-
-        if (error === null) {
-            let my_data = []
-            data.forEach((item, index) => {
-                let item2 = {...item._doc}
-                let my_item =  item2._voucher
-                let activeImage = my_item.activeImage.url
-                let inactiveImage = my_item.inactiveImage.url
-                let redemptionBarcode = my_item.redemptionBarcode.url
-                let _voucher = {
-                    activeImage,
-                    inactiveImage,
-                    redemptionBarcode,
-                    _id:my_item._id,
-                    title:my_item.title,
-                    quantity:my_item.quantity,
-                    voucherTaken:my_item.voucherTaken,
-                    voucherRedeemed:my_item.voucherRedeemed,
-                    _provider:my_item._provider,
-                    startDate:my_item.startDate,
-                    endDate:my_item.endDate,
-                    shortDescription:my_item.shortDescription,
-                    longDescription:my_item.longDescription,
-                    _customer:my_item._customer,
-                    _redeemedBy:my_item._redeemedBy,
-                    _voucherTransaction:my_item._voucherTransaction,
-                    deactivate:my_item.deactivate,
-                    iswelcome:my_item.iswelcome,
-                    __v:my_item.__v,
-                }
-                delete item2._voucher
-                my_data.push({...item2,_voucher})
-            })
-            resBody.status = true;
-            resBody.result = my_data;
-        } else {
-            resBody.msg = error.message;
-        }
-    } catch (e) {
-        console.log(e);
-        resBody.msg = JSON.stringify(e);
-    }
-
-    res.send(JSON.stringify(resBody));
-});
-
-router.get('/getCustomerVouchersab/', validation, async (req, res) => {
-    let resBody = {
-        result: [],
-        msg: "",
         status: false
     }
 
@@ -1051,6 +990,7 @@ router.get('/getCustomerVouchersab/', validation, async (req, res) => {
 
     res.send(JSON.stringify(resBody))
 });
+
 router.get('/getAllVoucherTransactions/', validation, async (req, res) => {
     let resBody = {
         result: [],
