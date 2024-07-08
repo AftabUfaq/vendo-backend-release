@@ -986,6 +986,7 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
                     inactiveImage,
                     redemptionBarcode,
                     _id:my_item._id,
+                    id:my_item.id,
                     title:my_item.title,
                     quantity:my_item.quantity,
                     voucherTaken:my_item.voucherTaken,
