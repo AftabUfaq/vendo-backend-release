@@ -156,14 +156,14 @@ const checkUserDailyLimit = async (userId) => {
 const cardValidationUsingCardId = async (cardId, timestamp, card) => {
   let obj = {};
   if (card.validUntil) {
-    obj.validUntil = timestamp;
+    obj.validUntil = { $lt: timestamp };;
   }
   let iscardEnabled = await db.getData(LoyaltyCard, {
     _id: ObjectId(cardId),
     status: "enabled",
     ...obj,
   });
-  return iscardEnabled ? true : false;
+  return iscardEnabled.data.length > 0 ? true : false;
 };
 
 router.post("/claimQrCode", async (req, res) => {
@@ -283,6 +283,10 @@ router.post("/claimQrCode", async (req, res) => {
           msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
         });
       }
+      return res.json({
+        status: false,
+        msg: "This card is not usable.",
+      });
     } else if (userCards.length > 0) {
       const i = userCards.findIndex(
         (userCard) => userCard._id.toString() === cardId.toString()

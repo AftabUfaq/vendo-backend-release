@@ -1026,7 +1026,7 @@ router.get("/getOneUser/:id", async (req, res) => {
               pdf_type: data[i].companyPresentationpdf ? true : false,
               pdfuri: data[i].companyPresentationpdf
                 ? "https://www.mein-vendoapp.de:3001" +
-                  data[i].companyPresentationpdf
+                data[i].companyPresentationpdf
                 : "",
             };
           }
@@ -1147,7 +1147,7 @@ router.get("/getOneUser/:id", async (req, res) => {
               pdf_type: data[i].jobAdvertisementpdf ? true : false,
               pdfuri: data[i].jobAdvertisementpdf
                 ? "https://www.mein-vendoapp.de:3001" +
-                  data[i].jobAdvertisementpdf
+                data[i].jobAdvertisementpdf
                 : "",
             };
           }
@@ -1308,7 +1308,7 @@ router.get("/getOneUser/:id", async (req, res) => {
               pdf_type: data[i].advertisingvideopdf ? true : false,
               pdfuri: data[i].advertisingvideopdf
                 ? "https://www.mein-vendoapp.de:3001" +
-                  data[i].advertisingvideopdf
+                data[i].advertisingvideopdf
                 : "",
             };
           }
@@ -1671,7 +1671,7 @@ router.get("/getAllUsers/", async (req, res) => {
   res.send(JSON.stringify(resBody));
 });
 
-router.get("/getAllUsersWithFilter/", validation, async (req, res) => {
+router.get("/getAllUsersWithFilter/", async (req, res) => {
   let resBody = {
     result: [],
     msg: "",
@@ -1680,41 +1680,37 @@ router.get("/getAllUsersWithFilter/", validation, async (req, res) => {
 
   try {
     let query = req.query || {};
-    console.log(query);
-
+    let s_query = {}
     if (query.providerName !== undefined) {
-      query.providerName = { $regex: query.providerName, $options: "i" };
+      s_query.providerName = { $regex: query.providerName, $options: "i" };
     }
 
     if (query.region !== undefined) {
-      query.region = { $regex: query.region, $options: "i" };
+      s_query.region = { $regex: query.region, $options: "i" };
     }
     if (query.Community !== undefined) {
-      query.community = { $regex: query.Community, $options: "i" };
+      s_query.community = { $regex: query.Community, $options: "i" };
     }
     if (query.deliveryCircle !== undefined) {
-      query.deliveryCircle = { $regex: query.deliveryCircle, $options: "i" };
+      s_query.deliveryCircle = { $regex: query.deliveryCircle, $options: "i" };
     }
-    query.deactivate = false;
+    s_query.deactivate = false;
     if (query.filter !== undefined) {
       if (query.filter === "voucher") {
-        query = {
-          ...query,
+        s_query = {
+          ...s_query,
           _vouchers: { $exists: true, $ne: null },
         };
       } else {
-        query = {
-          ...query,
-          [query.filter]: { $exists: true, $ne: null },
-          [query.filter + "StartDay"]: { $exists: true, $ne: null },
-          [query.filter + "EndDay"]: { $exists: true, $ne: null },
+        s_query = {
+          ...s_query,
+          [s_query.filter]: { $exists: true, $ne: null },
+          [s_query.filter + "StartDay"]: { $exists: true, $ne: null },
+          [s_query.filter + "EndDay"]: { $exists: true, $ne: null },
         };
       }
     }
-
-    console.log(JSON.stringify(query));
-
-    let { data, error } = await db.getData(ProviderModel, query, {
+    let { data, error } = await db.getData(ProviderModel, s_query, {
       _id: 0,
       id: "$_id",
       logo: "$logo.url",
