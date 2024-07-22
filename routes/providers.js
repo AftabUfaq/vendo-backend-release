@@ -12,6 +12,7 @@ const Setting = require("../lists/setting");
 const OtpModel = require("../lists/otp");
 const db = require("../database/mongooseCrud");
 const ProviderLikeRoot = require("../lists/root_provider_like");
+const ProviderAvailibility = require('../lists/providerAvailability')
 const ProviderWishlistRoot = require("../lists/root_provider_wishlist");
 const { sendMail } = require("../system/mail");
 
@@ -1990,5 +1991,35 @@ router.post("/update_time_post", async (req, res) => {
   }
   res.send(JSON.stringify(resBody));
 });
+
+router.post("/create-availibility", async ()=>{
+  let resBody = {
+    result: [],
+    msg: "",
+    status: false,
+  };
+
+  try{
+    let {day, from, to, providerId}= req.body;
+    console.log("hey")
+    
+    let createAvailibility= new ProviderAvailibility({day, form, to, providerId});
+    if(createAvailibility){
+      resBody.result.push(createAvailibility);
+      resBody.status= true;
+      resBody.msg= "Availibility added for the provider."
+  
+      return res.json(JSON.stringify(resBody))
+    }
+    else{
+      resBody.status= true;
+      resBody.msg= "Availibility added for the provider."
+
+      return res.json(JSON.stringify(resBody))
+    }
+  }catch(err){
+    res.json({message: err})
+  }
+})
 
 module.exports = router;

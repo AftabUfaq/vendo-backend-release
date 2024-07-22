@@ -6,11 +6,14 @@ var jwt = require('jsonwebtoken');
 var fs = require('fs');
 var path = require('path');
 
+const moment = require("moment");
+
 const ProviderModel = require('../lists/providers')
 const PrefeedModel = require('../lists/prfeed')
 const Setting = require('../lists/setting')
 const OtpModel = require('../lists/otp')
 const db = require('../database/mongooseCrud')
+const ProviderAvailibility = require('../lists/providerAvailability')
 const ProviderLikeRoot = require('../lists/root_provider_like')
 const ProviderWishlistRoot = require('../lists/root_provider_wishlist')
 const { sendMail } = require('../system/mail');
@@ -1310,5 +1313,77 @@ router.post('/update_time_post', async (req, res) => {
     res.send(JSON.stringify(resBody))
 })
 
+router.post("/create-availibility", async (req, res)=>{
+    let resBody = {
+      result: [],
+      msg: "",
+      status: false,
+    };
+  
+    let {day, from, to, providerId}= req.body;
+    try{
+      console.log("hey")
+      
+      let createAvailibility= new ProviderAvailibility({day, from, to, providerId});
+      
+      createAvailibility.save().then(doc => {
+        console.log('Document saved:', doc);
+      }
+      ).catch(err => {
+        console.error('Error saving document:', err);
+      }
+    );
+      if(createAvailibility){
+        resBody.result.push(createAvailibility);
+        resBody.status= true;
+        resBody.msg= "Availibility added for the provider."
+    
+        return res.json(resBody)
+      }
+      else{
+        resBody.status= true;
+        resBody.msg= "Availibility added for the provider."
+  
+        return res.json(resBody)
+      }
+    }catch(err){
+        resBody.msg= err;
+        res.json(resBody)
+    }
+  })
+
+  router.post("/check-availibility", async(req, res)=>{
+    let resBody = {
+        result: [],
+        msg: "",
+        status: false,
+    };
+    const {date, providerId}= req.body;
+    
+    if(!date || !providerId){
+        resBody.msg= "Please provide date and providerId."
+        return res.json(resBody)
+    }
+    const fullDate = moment(date, 'YYYY-MM-DD');
+    const day = fullDate.format('dddd').toLowerCase();
+
+    try{
+        
+        let availibilities= await ProviderAvailibility.find({providerId: ObjectId(providerId), day: day});
+
+        console.log(availibilities);
+
+        resBody.msg= "Availibilities fetched successfull";
+        resBody.status= true;
+        resBody.result= availibilities;
+        return res.json(resBody)
+
+    }catch(err){
+        resBody.msg= err;
+
+        return res.json(resBody);
+    }
+  })
 
 module.exports = router;
+
