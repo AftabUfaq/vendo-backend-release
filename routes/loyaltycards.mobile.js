@@ -156,7 +156,7 @@ const checkUserDailyLimit = async (userId) => {
 const cardValidationUsingCardId = async (cardId, timestamp, card) => {
   let obj = {};
   if (card.validUntil) {
-    obj.validUntil = { $lt: timestamp };;
+    obj.validUntil = { $gte: timestamp };;
   }
   let iscardEnabled = await db.getData(LoyaltyCard, {
     _id: ObjectId(cardId),
@@ -174,7 +174,7 @@ router.post("/claimQrCode", async (req, res) => {
   let userCards;
   let globalCardUsable;
   const currentDate = new Date();
-  const timestamp = currentDate.getTime();
+  const timestamp = parseInt((currentDate.getTime())/1000)
   try {
     // Check if QR code exists
     let doesQrCodeExist = await db.getData(Qrcode, {
@@ -280,7 +280,7 @@ router.post("/claimQrCode", async (req, res) => {
         user.save();
         return res.json({
           status: "success",
-          msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
+          msg :`Die BonusCard wurde erfolgreich in deinem Konto erstellt. ${qrCode.points} Punkte wurden deiner BonusCard hinzugefügt.`
         });
       }
       return res.json({
@@ -323,7 +323,7 @@ router.post("/claimQrCode", async (req, res) => {
           });
           return res.json({
             status: "success",
-            msg: `${points} points added to your card.`,
+            msg: `${points} Punkte wurden deiner BonusCard hinzugefügt.`,
           });
         } else if (existingPoints + points < maxPoints) {
           // card points can be added
@@ -337,7 +337,7 @@ router.post("/claimQrCode", async (req, res) => {
           });
           return res.json({
             status: "success",
-            msg: `${points} points added to your card.`,
+            msg: `${points} Punkte wurden deiner BonusCard hinzugefügt.`,
           });
         } else if (existingPoints + points > maxPoints) {
           
@@ -367,7 +367,7 @@ router.post("/claimQrCode", async (req, res) => {
           return res.json({
             status: "success",
             existingPointsInCard:existingPointsInCard,
-            msg: `${points} points added to your card.`,
+            msg: `${points} Punkte wurden deiner BonusCard hinzugefügt.`,
           });
         }
       }else{
@@ -392,7 +392,7 @@ router.post("/claimQrCode", async (req, res) => {
         });
         return res.json({
           status: "success",
-          msg: `${qrCode.points} points added to your card.`,
+          msg: `${qrCode.points} Punkte wurden deiner BonusCard hinzugefügt.`,
         });
       }
       } else {
@@ -422,7 +422,12 @@ router.post("/claimQrCode", async (req, res) => {
           user.save();
           return res.json({
             status: "success",
-            msg: `You have successfully added this card to your account. ${qrCode.points} points added to your card.`,
+            msg :`Die BonusCard wurde erfolgreich in deinem Konto erstellt. ${qrCode.points} Punkte wurden deiner BonusCard hinzugefügt.`
+          });
+        }else{
+          return res.json({
+            status: false,
+            msg: "This card is not usable.",
           });
         }
       }
@@ -437,7 +442,7 @@ router.post("/claimQrCode", async (req, res) => {
 router.get("/getCardsForVendor/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await LoyaltyCard.find({ vendorId: ObjectId(id) }).populate([
+    const result = await LoyaltyCard.find({ vendorId: ObjectId(id), status:"enabled" }).populate([
       {
         path: "qrCodes",
       },
@@ -559,13 +564,13 @@ router.get("/getCardsForUser/:id", async (req, res) => {
 });
 
 router.post("/cardSubscribedByUser", async (req, res) => {
-  const { _id, cardId, userId } = req.body;
+  const { cardId, userId } = req.body;
   try {
     let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
       userId: ObjectId(userId),
       cardId: ObjectId(cardId),
       redeemed:false,
-      status:"incomplete"
+    //  status:"incomplete"
     })
 
     let cardDetails= await db.getData(LoyaltyCard, {
@@ -579,23 +584,24 @@ router.post("/cardSubscribedByUser", async (req, res) => {
     })
 
     if(hasLoyaltyCardIncomplete.data.length > 0){
-      
+      let lastIndex = hasLoyaltyCardIncomplete.data.length  - 1
       return res.json({ hasCard: true, 
           details: 
             {
            
               cardId: cardId,
               vendorId: vendorId, 
+              _id: hasLoyaltyCardIncomplete.data[lastIndex]._id,
               address: vendorDetails.data[0].address,
               region: vendorDetails.data[0].region,
               logo: vendorDetails.data[0].logo.url,
               providerName: vendorDetails.data[0].providerName,
               maxPoints: cardDetails.data[0].maxPoints,
-              status: hasLoyaltyCardIncomplete.data[0].status,
-              validUntil: cardDetails.data[0].validUntil,
+              status: hasLoyaltyCardIncomplete.data[lastIndex].status,
+              validUntil: cardDetails.data[0].validUntil ? cardDetails.data[0].validUntil : null,
               details: cardDetails.data[0].details,
               createdAt: cardDetails.data[0].createdAt,
-              points: hasLoyaltyCardIncomplete.data[0].points
+              points: hasLoyaltyCardIncomplete.data[lastIndex].points
             } 
           });
     }
@@ -642,7 +648,7 @@ router.post("/cardSubscribedByUserLog", async (req, res) => {
     })
 
     if(hasLoyaltyCardIncomplete.data.length > 0){
-      
+      let lastIndex = hasLoyaltyCardIncomplete.data.length  - 1
       return res.json({ hasCard: true, 
           details: 
             {
@@ -718,20 +724,18 @@ router.delete("/deleteCardLogById/:id", async (req, res) => {
     })
     console.log(doesCardExist)
     if (doesCardExist.data.length == 0) {
-      return res.json({ status: false, msg: "Card does not exist" });
+      return res.json({ status: false, msg: "Karte existiert nicht" });
     }
     const result = await db.deleteOne(cardLogs, {
       _id: ObjectId(id),
     });
-
-    console.log(result);
     res.json({
       status: true,
-      msg: "Card log deleted successfully",
+      msg: "Karte erfolgreich gelöscht",
     });
   } catch (error) {
     console.log(error);
-    res.json({ status: false, msg: "Something went wrong: " + error });
+    res.json({ status: false, msg: "Etwas ist schief gelaufen: " + error });
   }
 });
 
