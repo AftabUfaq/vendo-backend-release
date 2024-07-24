@@ -1349,36 +1349,74 @@ router.post("/create-availibility", async (req, res) => {
     }
   });
 
-  router.post("/check-availibility", async(req, res)=>{
+  router.post("/check-availibility", async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
         status: false,
+        weeklyAvailibility: []
     };
-    const {date, providerId}= req.body;
-    
-    if(!date || !providerId){
-        resBody.msg= "Please provide date and providerId."
-        return res.json(resBody)
+    const { date, providerId } = req.body;
+
+    if (!date || !providerId) {
+        resBody.msg = "Please provide date and providerId.";
+        return res.json(resBody);
     }
+
     const fullDate = moment(date, 'YYYY-MM-DD');
     const day = fullDate.format('dddd').toLowerCase();
 
-    try{
-        
-        let availibilities= await ProviderAvailibility.find({providerId: ObjectId(providerId), day: day});
+    try {
+        // Fetch availability for the given date and providerId
+        let availibilities = await ProviderAvailibility.find({
+            providerId: ObjectId(providerId)
+        });
 
-        resBody.msg= "Availibilities fetched successfull";
-        resBody.status= true;
-        resBody.result= availibilities;
-        return res.json(resBody)
+        // Group availability data by day
+        const availabilitiesByDay = availibilities.reduce((acc, avail) => {
+            if (!acc[avail.day]) {
+                acc[avail.day] = [];
+            }
+            acc[avail.day].push({ start: avail.from, end: avail.to });
+            return acc;
+        }, {});
 
-    }catch(err){
-        resBody.msg= err;
+        // Generate weekly availability array
+        const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        let weeklyAvailibility = daysOfWeek.map(d => {
+            // Find availability for the current day
+            let availabilityForDay = availabilitiesByDay[d] || [];
+            let isAvailable = availabilityForDay.length > 0;
+            let start = isAvailable ? availabilityForDay[0].start : null;
+            let end = isAvailable ? availabilityForDay[0].end : null;
+
+            // If there are multiple availability entries, you might want to adjust how start and end are set
+            if (isAvailable && availabilityForDay.length > 1) {
+                // Optionally, find the earliest start time and latest end time if there are multiple entries
+                start = Math.min(...availabilityForDay.map(avail => avail.start));
+                end = Math.max(...availabilityForDay.map(avail => avail.end));
+            }
+
+            return {
+                day: d,
+                status: isAvailable,
+                start: start,
+                end: end
+            };
+        });
+
+        resBody.msg = "Availabilities fetched successfully";
+        resBody.status = true;
+        resBody.result = availibilities;
+        resBody.weeklyAvailibility = weeklyAvailibility;
 
         return res.json(resBody);
+    } catch (err) {
+        resBody.msg = err.message || "An error occurred";
+        return res.json(resBody);
     }
-  })
+});
+
 
 
   router.put("/update-availability", async (req, res) => {
