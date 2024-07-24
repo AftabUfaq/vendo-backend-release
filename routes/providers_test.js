@@ -1313,44 +1313,41 @@ router.post('/update_time_post', async (req, res) => {
     res.send(JSON.stringify(resBody))
 })
 
-router.post("/create-availibility", async (req, res)=>{
+router.post("/create-availibility", async (req, res) => {
     let resBody = {
       result: [],
       msg: "",
       status: false,
     };
   
-    let {day, from, to, providerId}= req.body;
-    try{
-      console.log("hey")
-      
-      let createAvailibility= new ProviderAvailibility({day, from, to, providerId});
-      
-      createAvailibility.save().then(doc => {
-        console.log('Document saved:', doc);
-      }
-      ).catch(err => {
-        console.error('Error saving document:', err);
-      }
-    );
-      if(createAvailibility){
-        resBody.result.push(createAvailibility);
-        resBody.status= true;
-        resBody.msg= "Availibility added for the provider."
-    
-        return res.json(resBody)
-      }
-      else{
-        resBody.status= true;
-        resBody.msg= "Availibility added for the provider."
+    const { day, from, to, providerId } = req.body;
   
-        return res.json(resBody)
+    try {
+  
+      if (!day || !from || !to || !providerId) {
+        resBody.msg = "All fields (day, from, to, providerId) are required.";
+        return res.status(400).json(resBody);
       }
-    }catch(err){
-        resBody.msg= err;
-        res.json(resBody)
+  
+      const existingAvailability = await ProviderAvailibility.findOne({ providerId, day });
+      if (existingAvailability) {
+        resBody.msg = "Availability for this day already exists for the provider.";
+        return res.status(400).json(resBody);
+      }
+  
+      const newAvailability = new ProviderAvailibility({ day, from, to, providerId });
+      const savedAvailability = await newAvailability.save();
+  
+      resBody.result.push(savedAvailability);
+      resBody.status = true;
+      resBody.msg = "Availability added for the provider.";
+      return res.json(resBody);
+  
+    } catch (err) {
+      resBody.msg = "An error occurred while adding availability.";
+      return res.status(500).json({ message: err.message });
     }
-  })
+  });
 
   router.post("/check-availibility", async(req, res)=>{
     let resBody = {
@@ -1371,8 +1368,6 @@ router.post("/create-availibility", async (req, res)=>{
         
         let availibilities= await ProviderAvailibility.find({providerId: ObjectId(providerId), day: day});
 
-        console.log(availibilities);
-
         resBody.msg= "Availibilities fetched successfull";
         resBody.status= true;
         resBody.result= availibilities;
@@ -1384,6 +1379,56 @@ router.post("/create-availibility", async (req, res)=>{
         return res.json(resBody);
     }
   })
+
+
+  router.put("/update-availability", async (req, res) => {
+    let resBody = {
+      result: [],
+      msg: "",
+      status: false,
+    };
+  
+    const { providerId, day, from, to } = req.body;
+  
+    try {
+      // Validate input
+      if (!providerId || !day || !from || !to) {
+        resBody.msg = "All fields (providerId, day, from, to) are required.";
+        return res.status(400).json(resBody);
+      }
+  
+      console.log("given",providerId, day)
+
+      // Find and update the availability entry
+      const Availability = await ProviderAvailibility.find({providerId: ObjectId(providerId), day});
+
+      console.log("Availability", Availability)
+      if(Availability){
+
+
+        Availability[0].from= from;
+        Availability[0].to= to;
+        
+        Availability[0].save();
+
+        resBody.result.push(Availability[0]);
+        resBody.status = true;
+        resBody.msg = "Availability updated successfully.";
+        return res.json(resBody);
+      }else{
+
+        console.log("outside")
+
+
+        resBody.msg = "No availability found for the given provider and day.";
+        return res.status(404).json(resBody);
+      }
+  
+    } catch (err) {
+      resBody.msg = "An error occurred while updating availability.";
+      return res.status(500).json({ message: err.message });
+    }
+  });
 
 module.exports = router;
 
