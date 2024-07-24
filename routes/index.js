@@ -31,6 +31,7 @@ const initfirebase = () => {
 
 initfirebase();
 
+
 const validation = (req, res, next) => {
   let token = req.headers["x-request-token"] || null;
   console.log(token);
@@ -587,7 +588,7 @@ router.post("/placeOrder/", async (req, res) => {
         paypalTranasctionId: req.body.paypalTranasctionId || "",
         notes: req.body.notes || "",
         address: req.body.address || "",
-        deliveryMode: req.body.deliveryMode || "",
+        deliveryMode: req.body.deliveryMode || null,
       });
 
       console.log(data, error);

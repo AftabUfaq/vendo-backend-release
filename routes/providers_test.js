@@ -8,6 +8,9 @@ var path = require('path');
 
 const moment = require("moment");
 
+const admin = require('firebase-admin');
+
+
 const ProviderModel = require('../lists/providers')
 const PrefeedModel = require('../lists/prfeed')
 const Setting = require('../lists/setting')
@@ -159,6 +162,21 @@ router.post('/add_user/', validation, (req, res) => {
             //req.body.password = pass
 
             let { data, error } = await db.insertOneData(ProviderModel, { ...req.body, update_time: new Date().toISOString(), ...extraBody })
+
+            const message = {
+                notification: {
+                  title: "Vendo",
+                  body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
+                },
+                topic: "new_provider",
+              };
+            
+              try {
+                const response = await admin.messaging().send(message);
+                console.log(`Notification sent successfully: ${response}`);
+              } catch (error) {
+                console.log(`Error sending notification: ${error}`);
+              }
 
             if (error === null) {
                 resBody.status = true
@@ -561,6 +579,21 @@ router.post('/addPRFeedData', validation, async (req, res) => {
 
             let { data, error } = await db.updateOneData(ProviderModel, { _id: req.body.providerId }, { $push: { PRFeedData: { ...req.body, update_time: new Date().toISOString(), ...extraBody } } })
             let getData = await ProviderModel.findOne({ _id: req.body.providerId });
+
+            const message = {
+                notification: {
+                  title: "Vendo",
+                  body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
+                },
+                topic: "new_post",
+              };
+            
+              try {
+                const response = await admin.messaging().send(message);
+                console.log(`Notification sent successfully: ${response}`);
+              } catch (error) {
+                console.log(`Error sending notification: ${error}`);
+              }
 
             if (error === null) {
                 resBody.status = true

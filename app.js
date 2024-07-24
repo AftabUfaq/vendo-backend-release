@@ -60,6 +60,7 @@ app.get("*", function (req, res) {
   res.status(404).end();
 });
 
+
 // error handler
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;

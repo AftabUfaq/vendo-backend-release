@@ -40,6 +40,7 @@ const TransactionSchema = new Schema({
         type: String
     },
     deliveryMode:{
+        default:"pickup",
         type: String
     }
 })

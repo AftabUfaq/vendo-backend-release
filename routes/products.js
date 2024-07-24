@@ -5,6 +5,9 @@ var jwt = require('jsonwebtoken');
 var fs = require('fs');
 var { parse } = require('csv-parse');
 
+
+
+
 const ProductModel = require('../lists/products')
 const ProviderModel = require('../lists/providers')
 const db = require('../database/mongooseCrud')
@@ -12,6 +15,13 @@ const db = require('../database/mongooseCrud')
 const multer = require('multer');
 
 var size = 2 * 1024 * 1024;
+
+const serviceAccount = require("./vendo-5a7dd-firebase-adminsdk-fdopp-dd6fdf5895.json");
+const admin = require('firebase-admin');
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//   });
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, process.env.FILE_PATH); // make sure this directory already exists!    
@@ -23,6 +33,8 @@ const storage = multer.diskStorage({
         cb(null, id.toString() + "_" + file.originalname.replace(/ /g, "_"));
     },
 });
+
+
 
 var upload = multer({
     storage,
@@ -165,6 +177,21 @@ router.post('/add_product/', validation, (req, res) => {
             let { data, error } = await db.insertOneData(ProductModel, { ...req.body, ...extraBody })
 
             let response = await db.updateOneDataPush(ProviderModel, { _id: req.body._provider }, {}, { _products: data })
+
+            const message = {
+                notification: {
+                  title: "Vendo",
+                  body: "Neues bei den Produkten in den Shops!",
+                },
+                topic: "new_product",
+              };
+            
+              try {
+                const response = await admin.messaging().send(message);
+                console.log(`Notification sent successfully: ${response}`);
+              } catch (error) {
+                console.log(`Error sending notification: ${error}`);
+              }
 
             if (error === null) {
                 resBody.status = true
