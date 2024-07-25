@@ -448,6 +448,7 @@ router.post('/placeOrder/', async (req, res) => {
         _customer: cid,
         _provider: pid,
         timestamp: (new Date()).getTime(),
+        pickupdateandtime: req.body.pickupdateandtime,
         totalPrice: req.body.totalPrice || "00.00",
         deliveryCost: req.body.deliveryCost || "00.00",
         paymentMode: req.body.paymentMode || "unknown",

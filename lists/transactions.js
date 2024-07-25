@@ -39,6 +39,14 @@ const TransactionSchema = new Schema({
     address: {
         type: String
     },
+    pickupdateandtime:  {
+        default:"none",
+        type: String
+    },
+    phone: {
+        default:"none",
+        type: String
+    },
     deliveryMode:{
         default:"pickup",
         type: String
