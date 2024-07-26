@@ -7,6 +7,8 @@ var createInitialUser = require("./initial-admin");
 
 createInitialUser();
 
+const admin = require("firebase-admin");
+
 var indexRouter = require("./routes/index");
 var indexTest = require("./routes/index_test");
 const users = require("./routes/users");
@@ -44,6 +46,28 @@ app.use(express.urlencoded({ extended: false, limit: "100mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 //app.use(serveStatic(path.join(__dirname, 'public')));
 app.use("/files", express.static(process.env.FILE_PATH));
+
+
+
+// (async function () {
+//   console.log("Sending notification...");
+//   let message= {
+//       "topic": "new_product",
+//       "notification": {
+//         "title": "Breaking Newszz",
+//         "body": "New news story available."
+//       }
+//     }
+  
+  
+//   try {
+//     const response = await admin.messaging().send(message);
+//     console.log(`Notification sent successfully: ${response}`);
+//   } catch (error) {
+//     console.log(`Error sending notification: ${error}`);
+//   }
+  
+// })();
 
 app.use("/", indexRouter);
 app.use("/test", indexTest);

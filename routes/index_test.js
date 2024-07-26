@@ -342,11 +342,11 @@ router.post('/placeOrder/', async (req, res) => {
   }
 
   try {
-    console.log(req.body.products,">>>>>>>>>>>>>>>KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK")
     let cid = null
     let pid = null
     // let providerEmail = ""
     let products = []
+    
     let productIds = []
     let ht1 = `<tr><td colspan="3" style="padding: 10px 15px 0px 15px;"><table style="width: 100%; background: #4f9567;"><tr><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; width: 150px;">Menge</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 30px; text-align: left;">Produkt</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; text-align: right;">Preis</td></tr>`;
     if (req.body.products != undefined && (req.body.products || []).length > 0) {

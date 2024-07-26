@@ -1458,8 +1458,7 @@ router.post('/update_time_post', async (req, res) => {
             return acc;
         }, {});
 
-        // Generate weekly availability array
-        const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const daysOfWeek = ['monntag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag' ];
         let weeklyAvailibility = daysOfWeek.map(d => {
             // Find availability for the current day
             let availabilityForDay = availabilitiesByDay[d] || [];
