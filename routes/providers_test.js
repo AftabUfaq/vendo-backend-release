@@ -1346,32 +1346,73 @@ router.post('/update_time_post', async (req, res) => {
     res.send(JSON.stringify(resBody))
 })
 
-router.post("/create-availibility", async (req, res) => {
+// router.post("/create-availibility", async (req, res) => {
+//     let resBody = {
+//       result: [],
+//       msg: "",
+//       status: false,
+//     };
+  
+//     const { day, from, to, providerId } = req.body;
+    
+//     try {
+  
+//       if (!day || !from || !to || !providerId) {
+//         resBody.msg = "All fields (day, from, to, providerId) are required.";
+//         return res.status(400).json(resBody);
+//       }
+  
+//       const existingAvailability = await ProviderAvailibility.findOne({ providerId, day });
+//       if (existingAvailability) {
+//         resBody.msg = "Availability for this day already exists for the provider.";
+//         return res.status(400).json(resBody);
+//       }
+  
+//       const newAvailability = new ProviderAvailibility({ day, from, to, providerId });
+//       const savedAvailability = await newAvailability.save();
+  
+//       resBody.result.push(savedAvailability);
+//       resBody.status = true;
+//       resBody.msg = "Availability added for the provider.";
+//       return res.json(resBody);
+  
+//     } catch (err) {
+//       resBody.msg = "An error occurred while adding availability.";
+//       return res.status(500).json({ message: err.message });
+//     }
+//   });
+
+  router.post("/create-availibility", async (req, res) => {
     let resBody = {
       result: [],
       msg: "",
       status: false,
     };
-  
-    const { day, from, to, providerId } = req.body;
-  
     try {
+        let mydata = req.body;
+        for(let i = 0; i < mydata.length ; i++) {
+        const { day, from, to, providerId } = mydata[i];
+    
+  
   
       if (!day || !from || !to || !providerId) {
         resBody.msg = "All fields (day, from, to, providerId) are required.";
+       
         return res.status(400).json(resBody);
       }
   
       const existingAvailability = await ProviderAvailibility.findOne({ providerId, day });
       if (existingAvailability) {
-        resBody.msg = "Availability for this day already exists for the provider.";
-        return res.status(400).json(resBody);
+        ///resBody.msg = "Availability for this day already exists for the provider.";
+        //return res.status(400).json(resBody);
+      }else{
+  
+        const newAvailability = new ProviderAvailibility({ day, from, to, providerId });
+        const savedAvailability = await newAvailability.save();
+  
+          resBody.result.push(savedAvailability);
       }
-  
-      const newAvailability = new ProviderAvailibility({ day, from, to, providerId });
-      const savedAvailability = await newAvailability.save();
-  
-      resBody.result.push(savedAvailability);
+    }
       resBody.status = true;
       resBody.msg = "Availability added for the provider.";
       return res.json(resBody);
@@ -1389,15 +1430,18 @@ router.post("/create-availibility", async (req, res) => {
         status: false,
         weeklyAvailibility: []
     };
-    const { date, providerId } = req.body;
-
-    if (!date || !providerId) {
+    const {providerId } = req.body;
+    if (!providerId) {
         resBody.msg = "Please provide date and providerId.";
         return res.json(resBody);
     }
+    // if (!date || !providerId) {
+    //     resBody.msg = "Please provide date and providerId.";
+    //     return res.json(resBody);
+    // }
 
-    const fullDate = moment(date, 'YYYY-MM-DD');
-    const day = fullDate.format('dddd').toLowerCase();
+    // const fullDate = moment(date, 'YYYY-MM-DD');
+    // const day = fullDate.format('dddd').toLowerCase();
 
     try {
         // Fetch availability for the given date and providerId
@@ -1441,7 +1485,7 @@ router.post("/create-availibility", async (req, res) => {
         resBody.msg = "Availabilities fetched successfully";
         resBody.status = true;
         resBody.result = availibilities;
-        resBody.weeklyAvailibility = weeklyAvailibility;
+        //resBody.weeklyAvailibility = weeklyAvailibility;
 
         return res.json(resBody);
     } catch (err) {
