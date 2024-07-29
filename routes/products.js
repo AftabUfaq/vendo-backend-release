@@ -7,7 +7,7 @@ var { parse } = require('csv-parse');
 
 
 
-
+const NotificationsTrack = require('../lists/NotificationsTrack')
 const ProductModel = require('../lists/products')
 const ProviderModel = require('../lists/providers')
 const db = require('../database/mongooseCrud')
@@ -178,20 +178,55 @@ router.post('/add_product/', validation, (req, res) => {
 
             let response = await db.updateOneDataPush(ProviderModel, { _id: req.body._provider }, {}, { _products: data })
 
-            const message = {
-                notification: {
-                  title: "Vendo",
-                  body: "Neues bei den Produkten in den Shops!",
-                },
-                topic: "new_product",
-              };
-            
-              try {
-                const response = await admin.messaging().send(message);
-                console.log(`Notification sent successfully: ${response}`);
-              } catch (error) {
-                console.log(`Error sending notification: ${error}`);
-              }
+            let notificationsMeta= await db.getData(NotificationsTrack, {notificationType: "product"})
+
+
+            if(notificationsMeta.data.length == 0){
+                const message = {
+                    notification: {
+                      title: "Vendo",
+                      body: "Neues bei den Produkten in den Shops!",
+                    },
+                    topic: "new_product",
+                  };
+                  try {
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
+                    const response = await admin.messaging().send(message);
+                    console.log(`Notification sent successfully: ${response}`);
+                  } catch (error) {
+                    console.log(`Error sending notification: ${error}`);
+                  }
+            }else{
+
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const now = new Date();
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
+                if(lastNotification < fourHoursAgo){
+                      // Send the push notification
+
+                     const message = {
+                        notification: {
+                            title: "Vendo",
+                            body: "Neues bei den Produkten in den Shops!",
+                        },
+                        topic: "new_product",
+                    };
+    
+                    try {
+                        const response = await admin.messaging().send(message);
+                        console.log(`Notification sent successfully: ${response}`);
+
+                        await db.updateOne(NotificationsTrack, { notificationType: "product" }, { $set: { lastNotification: now } });
+                    } catch (error) {
+                        console.log(`Error sending notification: ${error}`);
+                    }
+                 }
+                 else{
+                    console.log("Notification was sent less than 4 hours ago.");
+                 }
+            }
+
 
             if (error === null) {
                 resBody.status = true

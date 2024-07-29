@@ -6,11 +6,13 @@ var jwt = require('jsonwebtoken');
 var fs = require('fs');
 var path = require('path');
 
+
 const moment = require("moment");
 
 const admin = require('firebase-admin');
 
 
+const NotificationsTrack = require("../lists/NotificationsTrack")
 const ProviderModel = require('../lists/providers')
 const PrefeedModel = require('../lists/prfeed')
 const Setting = require('../lists/setting')
@@ -163,20 +165,68 @@ router.post('/add_user/', validation, (req, res) => {
 
             let { data, error } = await db.insertOneData(ProviderModel, { ...req.body, update_time: new Date().toISOString(), ...extraBody })
 
-            const message = {
-                notification: {
-                  title: "Vendo",
-                  body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
-                },
-                topic: "new_provider",
-              };
+            let notificationsMeta= await db.getData(NotificationsTrack, {notificationType: "provider"})
+
+
+            if(notificationsMeta.data.length == 0){
+                const message = {
+                    notification: {
+                      title: "Vendo",
+                      body: "Neues bei den Produkten in den Shops!",
+                    },
+                    topic: "new_product",
+                  };
+                  try {
+                    await new NotificationsTrack({ notificationType: "provider", lastNotification:  new Date().toISOString()}).save();
+                    const response = await admin.messaging().send(message);
+                    console.log(`Notification sent successfully: ${response}`);
+                  } catch (error) {
+                    console.log(`Error sending notification: ${error}`);
+                  }
+            }else{
+
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const now = new Date();
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
+                if(lastNotification < fourHoursAgo){
+                      // Send the push notification
+
+                      const message = {
+                        notification: {
+                          title: "Vendo",
+                          body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
+                        },
+                        topic: "new_provider",
+                      };
+                    
+                      try {
+                        const response = await admin.messaging().send(message);
+                        console.log(`Notification sent successfully: ${response}`);
+                        await db.updateOne(NotificationsTrack, { notificationType: "provider" }, { $set: { lastNotification: now } });
+                      } catch (error) {
+                        console.log(`Error sending notification: ${error}`);
+                      }
+                 }
+                 else{
+                    console.log("Notification was sent less than 4 hours ago.");
+                 }
+            }
+
+            // const message = {
+            //     notification: {
+            //       title: "Vendo",
+            //       body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
+            //     },
+            //     topic: "new_provider",
+            //   };
             
-              try {
-                const response = await admin.messaging().send(message);
-                console.log(`Notification sent successfully: ${response}`);
-              } catch (error) {
-                console.log(`Error sending notification: ${error}`);
-              }
+            //   try {
+            //     const response = await admin.messaging().send(message);
+            //     console.log(`Notification sent successfully: ${response}`);
+            //   } catch (error) {
+            //     console.log(`Error sending notification: ${error}`);
+            //   }
 
             if (error === null) {
                 resBody.status = true
@@ -580,20 +630,69 @@ router.post('/addPRFeedData', validation, async (req, res) => {
             let { data, error } = await db.updateOneData(ProviderModel, { _id: req.body.providerId }, { $push: { PRFeedData: { ...req.body, update_time: new Date().toISOString(), ...extraBody } } })
             let getData = await ProviderModel.findOne({ _id: req.body.providerId });
 
-            const message = {
-                notification: {
-                  title: "Vendo",
-                  body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
-                },
-                topic: "new_post",
-              };
+            let notificationsMeta= await db.getData(NotificationsTrack, {notificationType: "post"})
+
+
+            if(notificationsMeta.data.length == 0){
+                const message = {
+                    notification: {
+                      title: "Vendo",
+                      body: "Neues bei den Produkten in den Shops!",
+                    },
+                    topic: "new_product",
+                  };
+                  try {
+                    await new NotificationsTrack({ notificationType: "post", lastNotification:  new Date().toISOString()}).save();
+                    const response = await admin.messaging().send(message);
+                    console.log(`Notification sent successfully: ${response}`);
+                  } catch (error) {
+                    console.log(`Error sending notification: ${error}`);
+                  }
+            }else{
+
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const now = new Date();
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
+                if(lastNotification < fourHoursAgo){
+                      // Send the push notification
+
+                    const message = {
+                        notification: {
+                        title: "Vendo",
+                        body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
+                    },
+                        topic: "new_post",
+                    };
+    
+                    try {
+                        const response = await admin.messaging().send(message);
+                        console.log(`Notification sent successfully: ${response}`);
+
+                        await db.updateOne(NotificationsTrack, { notificationType: "post" }, { $set: { lastNotification: now } });
+                    } catch (error) {
+                        console.log(`Error sending notification: ${error}`);
+                    }
+                 }
+                 else{
+                    console.log("Notification was sent less than 4 hours ago.");
+                 }
+            }
+
+            // const message = {
+            //     notification: {
+            //       title: "Vendo",
+            //       body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
+            //     },
+            //     topic: "new_post",
+            //   };
             
-              try {
-                const response = await admin.messaging().send(message);
-                console.log(`Notification sent successfully: ${response}`);
-              } catch (error) {
-                console.log(`Error sending notification: ${error}`);
-              }
+            //   try {
+            //     const response = await admin.messaging().send(message);
+            //     console.log(`Notification sent successfully: ${response}`);
+            //   } catch (error) {
+            //     console.log(`Error sending notification: ${error}`);
+            //   }
 
             if (error === null) {
                 resBody.status = true
