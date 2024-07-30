@@ -487,7 +487,7 @@ router.post('/placeOrder/', async (req, res) => {
 <p>Straße : ${cleanCart.data[0].street}</p>
 <p>Telefonnummer : ${cleanCart.data[0].mobile}</p> */}
         let mailDetails = {
-          from: 'support@sicorpindia.com',
+          from: 'support@taskdone-app.de',
           to: provider.data[0].email,
           //to : 'shreya@brainiuminfotech.com',
 

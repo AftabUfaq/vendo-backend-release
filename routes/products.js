@@ -198,11 +198,14 @@ router.post('/add_product/', validation, (req, res) => {
                   }
             }else{
 
-                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification).getTime()/1000;
                 const now = new Date();
-                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
-                if(lastNotification < fourHoursAgo){
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).getTime()/1000;
+                const fourHoursInMilliseconds = 4 * 60 * 60 * 1000;
+                
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo, lastNotification < fourHoursAgo);
+
+                if((now.getTime()/1000 - lastNotification) <= fourHoursInMilliseconds){
                       // Send the push notification
 
                      const message = {
@@ -217,7 +220,7 @@ router.post('/add_product/', validation, (req, res) => {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
 
-                        await db.updateOne(NotificationsTrack, { notificationType: "product" }, { $set: { lastNotification: now } });
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
                     } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                     }

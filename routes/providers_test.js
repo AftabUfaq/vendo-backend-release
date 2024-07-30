@@ -177,7 +177,7 @@ router.post('/add_user/', validation, (req, res) => {
                     topic: "new_product",
                   };
                   try {
-                    await new NotificationsTrack({ notificationType: "provider", lastNotification:  new Date().toISOString()}).save();
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
                     const response = await admin.messaging().send(message);
                     console.log(`Notification sent successfully: ${response}`);
                   } catch (error) {
@@ -185,11 +185,14 @@ router.post('/add_user/', validation, (req, res) => {
                   }
             }else{
 
-                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification).getTime()/1000;
                 const now = new Date();
-                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
-                if(lastNotification < fourHoursAgo){
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).getTime()/1000;
+                const fourHoursInMilliseconds = 4 * 60 * 60 * 1000;
+                
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo, lastNotification < fourHoursAgo);
+
+                if((now.getTime()/1000 - lastNotification) <= fourHoursInMilliseconds){
                       // Send the push notification
 
                       const message = {
@@ -203,7 +206,7 @@ router.post('/add_user/', validation, (req, res) => {
                       try {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
-                        await db.updateOne(NotificationsTrack, { notificationType: "provider" }, { $set: { lastNotification: now } });
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
                       } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                       }
@@ -642,7 +645,7 @@ router.post('/addPRFeedData', validation, async (req, res) => {
                     topic: "new_product",
                   };
                   try {
-                    await new NotificationsTrack({ notificationType: "post", lastNotification:  new Date().toISOString()}).save();
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
                     const response = await admin.messaging().send(message);
                     console.log(`Notification sent successfully: ${response}`);
                   } catch (error) {
@@ -650,11 +653,14 @@ router.post('/addPRFeedData', validation, async (req, res) => {
                   }
             }else{
 
-                const lastNotification = new Date(notificationsMeta.data[0].lastNotification);
+                const lastNotification = new Date(notificationsMeta.data[0].lastNotification).getTime()/1000;
                 const now = new Date();
-                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo);
-                if(lastNotification < fourHoursAgo){
+                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).getTime()/1000;
+                const fourHoursInMilliseconds = 4 * 60 * 60 * 1000;
+                
+                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo, lastNotification < fourHoursAgo);
+
+                if((now.getTime()/1000 - lastNotification) <= fourHoursInMilliseconds){
                       // Send the push notification
 
                     const message = {
@@ -669,7 +675,7 @@ router.post('/addPRFeedData', validation, async (req, res) => {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
 
-                        await db.updateOne(NotificationsTrack, { notificationType: "post" }, { $set: { lastNotification: now } });
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
                     } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                     }
