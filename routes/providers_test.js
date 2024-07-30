@@ -1583,7 +1583,7 @@ router.post('/update_time_post', async (req, res) => {
         resBody.msg = "Availabilities fetched successfully";
         resBody.status = true;
         resBody.result = availibilities;
-        //resBody.weeklyAvailibility = weeklyAvailibility;
+        resBody.weeklyAvailibility = weeklyAvailibility;
 
         return res.json(resBody);
     } catch (err) {
