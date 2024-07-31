@@ -605,7 +605,7 @@ router.post("/placeOrder/", async (req, res) => {
           {}
         );
 
-        //  let provider = await db.getData(ProviderModel, { _id: pid }, {})
+         let provider = await db.getData(ProviderModel, { _id: pid }, {})
 
         let transactionID = (JSON.parse(JSON.stringify(data)) || {})._id;
         console.log("Order transaction id -", transactionID);
@@ -616,54 +616,496 @@ router.post("/placeOrder/", async (req, res) => {
           var p_mode = req.body.paymentMode;
         }
 
-        let ht = `<html lang="en"><head><meta charset="utf-8"></head><body><table style="background-color: #fff; padding: 0px; margin: 50px auto 50px auto; max-width: 600px; width: 100%; box-shadow: 0 0 10px #85749e;"><tbody><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestelldatum:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestellzeit:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestell ID:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${fromatted_date}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${strTime}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${transactionID}</td></tr><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bezahlart:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${p_mode}</td></tr><tr><td colspan="3" style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold;">Kundendaten:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Name: ${
-          customer_details.name
-        }</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">${
-          req.body.deliveryMode === "Abholung" ? "Telefonnummer:" : "Adresse:"
-        } ${
-          req.body.address
-        }</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Liefermodus: ${
-          req.body.deliveryMode
-        }</td></tr><tr><td colspan="3" style=" font-size: 23px; padding: 15px; color: #245635; font-weight: bold;">Bestellinformation:</td></tr>`;
-
-        ht = ht + ht1;
-        ht =
-          ht +
-          `<tr><td colspan="3" style="padding: 0px 15px 0px 15px;"><table style="width: 100%; background: #1f5632;"><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff; width: 150px;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;">Zwischensumme</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;">${(
-            Number(req.body.totalPrice.replace(",", ".")) -
-            Number(req.body.deliveryCost.replace(",", "."))
-          )
-            .toString()
-            .replace(
-              ".",
-              ","
-            )} €</td></tr><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff; width: 150px;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;">Lieferkosten</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;">${req.body.deliveryCost.replace(
-            ".",
-            ","
-          )} €</td></tr><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;"><strong>Gesamt</strong> inkl. MwSt.</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;"><strong>${req.body.totalPrice.replace(
-            ".",
-            ","
-          )} €</strong></td></tr></table></td></tr><tr><td colspan="3" style=" font-size: 22px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bemerkung vom Kunden:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 3px;">${
-            req.body.notes
-          }</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Bestellung akzeptieren, bitte diesen Link anklicken, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=1&pid=` +
-          pid +
-          `&cid=` +
-          cid +
-          `&pname=` +
-          provider.data[0].providerName +
-          `'>Bestellung bestätigen</a></td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Bestellung ablehnen, bitte diesen Link anklicken, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 5px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=2&pid=` +
-          pid +
-          `&cid=` +
-          cid +
-          `&pname=` +
-          provider.data[0].providerName +
-          `'>Bestellung ablehnen</a></td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;">Wichtige Information: Sollten Sie die Bestellung ablehnen und der Kunde hat über die Bezahlart Paypal schon bezahlt, sind Sie verpflichtet sich mit dem Kunden umgehend in Verbindung zusetzen und ihm/ihr das Geld  zurückzuerstatten</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Die Bestellung ist nun unterwegs, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=3&pid=` +
-          pid +
-          `&cid=` +
-          cid +
-          `&pname=` +
-          provider.data[0].providerName +
-          `'>Auslieferung bestätigen</a></td></tr></tbody><tfoot style="background-color: #fff;"><tr><td colspan="3"><p style="font-size: 20px; color: #000; text-align: center;margin-bottom: 20px;margin-top: 20px; padding-bottom: 20px;">-Das ist keine Rechnung-</p></td></tr></tfoot></table></body></html>`;
+        let ht = `
+            <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <table
+      style="
+        background-color: #fff;
+        padding: 0px;
+        margin: 50px auto 50px auto;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 0 10px #85749e;
+      "
+    >
+      <tbody>
+        <tr>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+            Bestelldatum:
+          </td>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+            Bestellzeit:
+          </td>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+            Bestell ID:
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+            "
+          >
+            ${fromatted_date}
+          </td>
+          <td
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+            "
+          >
+            ${strTime}
+          </td>
+          <td
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+            "
+          >
+            ${transactionID}
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+          Bezahlart:
+          </td>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+          Auftragsart:
+          </td>
+          <td
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+          Abholzeit:
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+            "
+          >
+            ${p_mode ? p_mode : "N/A"}
+          </td>
+          <td
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+            "
+          >
+          ${provider.data[0].Lieferung ? "Lieferung" : provider.data[0].Abholung ? "Abholung" : "N/A"}
+        </td>
+        <td
+        style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 0px;
+              "
+          >
+          ${req.body.pickupdateandtime ? req.body.pickupdateandtime : "N/A"}
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 20px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+            "
+          >
+            Kundendaten:
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 6px;
+            "
+          >
+            Name: ${ customer_details.name }
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 6px;
+            "
+          >
+            ${ req.body.deliveryMode === "Abholung" ? "Telefonnummer:" :
+            "Adresse:" } ${ req.body.address }
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 6px;
+            "
+          >
+            Liefermodus: ${ req.body.deliveryMode }
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 23px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+            "
+          >
+            Bestellinformation:
+          </td>
+        </tr>
+        `; ht = ht + ht1; ht = ht + `
+        <tr>
+          <td colspan="3" style="padding: 0px 15px 0px 15px">
+            <table style="width: 100%; background: #1f5632">
+              <tr>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 10px;
+                    color: #fff;
+                    width: 150px;
+                  "
+                >
+                  &nbsp;
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 30px;
+                    color: #fff;
+                    text-align: left;
+                  "
+                >
+                  Zwischensumme
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 10px;
+                    color: #fff;
+                    text-align: right;
+                  "
+                >
+                  ${( Number(req.body.totalPrice.replace(",", ".")) -
+                  Number(req.body.deliveryCost.replace(",", ".")) ) .toString()
+                  .replace( ".", "," )} €
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 10px;
+                    color: #fff;
+                    width: 150px;
+                  "
+                >
+                  &nbsp;
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 30px;
+                    color: #fff;
+                    text-align: left;
+                  "
+                >
+                  Lieferkosten
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 10px;
+                    color: #fff;
+                    text-align: right;
+                  "
+                >
+                  ${req.body.deliveryCost.replace( ".", "," )} €
+                </td>
+              </tr>
+              <tr>
+                <td style="font-size: 15px; padding: 5px 10px; color: #fff">
+                  &nbsp;
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 30px;
+                    color: #fff;
+                    text-align: left;
+                  "
+                >
+                  <strong>Gesamt</strong> inkl. MwSt.
+                </td>
+                <td
+                  style="
+                    font-size: 15px;
+                    padding: 5px 10px;
+                    color: #fff;
+                    text-align: right;
+                  "
+                >
+                  <strong>${req.body.totalPrice.replace( ".", "," )} €</strong>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 22px;
+              padding: 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 5px;
+            "
+          >
+            Bemerkung vom Kunden:
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 3px;
+            "
+          >
+            ${ req.body.notes }
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 3px;
+            "
+          >
+            Bestellung akzeptieren, bitte diesen Link anklicken, der Kunde wird
+            darüber informiert:
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 10px;
+            "
+          >
+            <a
+              href="https://www.mein-vendoapp.de:3001/sendnotification?type=1&pid=` +
+  pid +
+  `&cid=` +
+  cid +
+  `&pname=` +
+  provider.data[0].providerName +
+  `"
+              >Bestellung bestätigen</a
+            >
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 3px;
+            "
+          >
+            Bestellung ablehnen, bitte diesen Link anklicken, der Kunde wird
+            darüber informiert:
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 5px;
+            "
+          >
+            <a
+              href="https://www.mein-vendoapp.de:3001/sendnotification?type=2&pid=` +
+  pid +
+  `&cid=` +
+  cid +
+  `&pname=` +
+  provider.data[0].providerName +
+  `"
+              >Bestellung ablehnen</a
+            >
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 10px;
+            "
+          >
+            Wichtige Information: Sollten Sie die Bestellung ablehnen und der
+            Kunde hat über die Bezahlart Paypal schon bezahlt, sind Sie
+            verpflichtet sich mit dem Kunden umgehend in Verbindung zusetzen und
+            ihm/ihr das Geld zurückzuerstatten
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #245635;
+              font-weight: bold;
+              padding-bottom: 3px;
+            "
+          >
+            Die Bestellung ist nun unterwegs, der Kunde wird darüber informiert:
+          </td>
+        </tr>
+        <tr>
+          <td
+            colspan="3"
+            style="
+              font-size: 18px;
+              padding: 0 15px;
+              color: #424242;
+              padding-bottom: 10px;
+            "
+          >
+            <a
+              href="https://www.mein-vendoapp.de:3001/sendnotification?type=3&pid=` +
+  pid +
+  `&cid=` +
+  cid +
+  `&pname=` +
+  provider.data[0].providerName +
+  `"
+              >Auslieferung bestätigen</a
+            >
+          </td>
+        </tr>
+      </tbody>
+      <tfoot style="background-color: #fff">
+        <tr>
+          <td colspan="3">
+            <p
+              style="
+                font-size: 20px;
+                color: #000;
+                text-align: center;
+                margin-bottom: 20px;
+                margin-top: 20px;
+                padding-bottom: 20px;
+              "
+            >
+              -Das ist keine Rechnung-
+            </p>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </body>
+</html>
+        `;
 
         {
           /* <p>Name :  ${cleanCart.data[0].name}</p>
