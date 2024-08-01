@@ -616,12 +616,12 @@ router.post("/placeOrder/", async (req, res) => {
           var p_mode = req.body.paymentMode;
         }
 
-        let ht = `
-            <head>
+        let ht= `
+<head>
     <meta charset="utf-8" />
   </head>
   <body>
-    <table
+      <table
       style="
         background-color: #fff;
         padding: 0px;
@@ -629,9 +629,9 @@ router.post("/placeOrder/", async (req, res) => {
         max-width: 600px;
         width: 100%;
         box-shadow: 0 0 10px #85749e;
-      "
+        "
     >
-      <tbody>
+    <tbody>
         <tr>
           <td
             style="
@@ -832,10 +832,11 @@ router.post("/placeOrder/", async (req, res) => {
             Bestellinformation:
           </td>
         </tr>
-        `; ht = ht + ht1; ht = ht + `
+        
         <tr>
-          <td colspan="3" style="padding: 0px 15px 0px 15px">
-            <table style="width: 100%; background: #1f5632">
+            <td colspan="3" style="padding: 0px 15px 0px 15px">
+                <table style="width: 100%; background: #1f5632">
+                ${ht1}
               <tr>
                 <td
                   style="
@@ -1107,11 +1108,6 @@ router.post("/placeOrder/", async (req, res) => {
 </html>
         `;
 
-        {
-          /* <p>Name :  ${cleanCart.data[0].name}</p>
-<p>Straße : ${cleanCart.data[0].street}</p>
-<p>Telefonnummer : ${cleanCart.data[0].mobile}</p> */
-        }
         let mailDetails = {
           from: "support@sicorpindia.com",
           to: provider.data[0].email,
