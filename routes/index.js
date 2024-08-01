@@ -386,10 +386,6 @@ router.post("/placeOrder/", async (req, res) => {
   };
 
   try {
-    console.log(
-      req.body.products,
-      ">>>>>>>>>>>>>>>KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK"
-    );
     let cid = null;
     let pid = null;
     // let providerEmail = ""
@@ -408,14 +404,13 @@ router.post("/placeOrder/", async (req, res) => {
           name: 1,
           inStock: 1,
         });
-        console.log(product1);
-        if (Number(product1.inStock) < Number(i.quantity)) {
-          resBody.msg = "Ausverkauft";
-          res.send(JSON.stringify(resBody));
-          return false;
-        }
-        let inStock = Number(product1.inStock) - Number(i.quantity);
-        await ProductModel.findByIdAndUpdate(i.productId, { inStock: inStock });
+        console.log(product1, "instock");
+        // if (Number(product1.inStock) < Number(i.quantity)) {
+        //   resBody.msg = "Ausverkauft";
+        //   return res.send(JSON.stringify(resBody));
+        // }
+        // let inStock = Number(product1.inStock) - Number(i.quantity);
+        // await ProductModel.findByIdAndUpdate(i.productId, { inStock: inStock });
         // db.updateOneData(ProductModel,{id: i.productId },{inStock:product1})
         //   let { data, error } = db.getPopulatedData(ProductModel, { _id: i.productId }, "_provider", { _id: 0, id: "$_id", logo: "$logo.url", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1 }, {
         //     _id: 0, id: "$_id", name: 1, deactivate: 1, maxQuantity: 1, category: 1, size: 1, ingredients: 1, status: 1, shortDescription: 1, longDescription: 1, productImage: "$productImage.url", price: 1
@@ -444,8 +439,7 @@ router.post("/placeOrder/", async (req, res) => {
       ht1 = ht1 + `</table></td></tr>`;
     } else {
       resBody.msg = "No product selected";
-      res.send(JSON.stringify(resBody));
-      return false;
+      return res.send(JSON.stringify(resBody));
     }
 
     // console.log(products)
@@ -454,16 +448,15 @@ router.post("/placeOrder/", async (req, res) => {
       cid = new ObjectId(req.body.cid);
     } else {
       resBody.msg = "Please send Customer ID";
-      res.send(JSON.stringify(resBody));
-      return false;
+      return res.send(JSON.stringify(resBody));
+      
     }
 
     if (req.body.pid != undefined) {
       pid = new ObjectId(req.body.pid);
     } else {
       resBody.msg = "Please send Provider ID";
-      res.send(JSON.stringify(resBody));
-      return false;
+      return res.send(JSON.stringify(resBody));
     }
 
     var customer_details = await CustomerModel.findOne({
@@ -615,6 +608,7 @@ router.post("/placeOrder/", async (req, res) => {
         } else {
           var p_mode = req.body.paymentMode;
         }
+
 
         let ht= `
 <head>
@@ -1107,10 +1101,14 @@ router.post("/placeOrder/", async (req, res) => {
   </body>
 </html>
         `;
-
+        console.log("body html",ht )
+        
         let mailDetails = {
-          from: "support@sicorpindia.com",
-          to: provider.data[0].email,
+          // from: "support@sicorpindia.com",
+          from: "support@mein-vendo.de",
+          // to: provider.data[0].email,
+          to: "haiderzamanyzi@gmail.com",
+
           //to : 'shreya@brainiuminfotech.com',
 
           //subject: `A new order has been placed | ${transactionID}`,
@@ -1120,7 +1118,7 @@ router.post("/placeOrder/", async (req, res) => {
 
         sendMail(mailDetails)
           .then(async (d) => {
-            console.log("Mail sent");
+            console.log("Mail sent", mailDetails.to);
           })
           .catch((err) => {
             console.log(err);
@@ -1138,8 +1136,9 @@ router.post("/placeOrder/", async (req, res) => {
   } catch (e) {
     console.log("Error", e);
     resBody.msg = "Something went wrong";
+    resBody.d= ht1;
   }
-  res.send(JSON.stringify(resBody));
+  return res.send(JSON.stringify(resBody));
 });
 
 router.get("/getAllTransactions/", validation, async (req, res) => {
