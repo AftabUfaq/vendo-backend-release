@@ -165,56 +165,7 @@ router.post('/add_user/', validation, (req, res) => {
 
             let { data, error } = await db.insertOneData(ProviderModel, { ...req.body, update_time: new Date().toISOString(), ...extraBody })
 
-            let notificationsMeta= await db.getData(NotificationsTrack, {notificationType: "provider"})
-
-
-            if(notificationsMeta.data.length == 0){
-                const message = {
-                    notification: {
-                      title: "Vendo",
-                      body: "Neues bei den Produkten in den Shops!",
-                    },
-                    topic: "new_product",
-                  };
-                  try {
-                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
-                    const response = await admin.messaging().send(message);
-                    console.log(`Notification sent successfully: ${response}`);
-                  } catch (error) {
-                    console.log(`Error sending notification: ${error}`);
-                  }
-            }else{
-
-                const lastNotification = new Date(notificationsMeta.data[0].lastNotification).getTime()/1000;
-                const now = new Date();
-                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).getTime()/1000;
-                const fourHoursInMilliseconds = 4 * 60 * 60 * 1000;
-                
-                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo, lastNotification < fourHoursAgo);
-
-                if((now.getTime()/1000 - lastNotification) <= fourHoursInMilliseconds){
-                      // Send the push notification
-
-                      const message = {
-                        notification: {
-                          title: "Vendo",
-                          body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
-                        },
-                        topic: "new_provider",
-                      };
-                    
-                      try {
-                        const response = await admin.messaging().send(message);
-                        console.log(`Notification sent successfully: ${response}`);
-                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
-                      } catch (error) {
-                        console.log(`Error sending notification: ${error}`);
-                      }
-                 }
-                 else{
-                    console.log("Notification was sent less than 4 hours ago.");
-                 }
-            }
+            
 
             // const message = {
             //     notification: {
@@ -633,57 +584,7 @@ router.post('/addPRFeedData', validation, async (req, res) => {
             let { data, error } = await db.updateOneData(ProviderModel, { _id: req.body.providerId }, { $push: { PRFeedData: { ...req.body, update_time: new Date().toISOString(), ...extraBody } } })
             let getData = await ProviderModel.findOne({ _id: req.body.providerId });
 
-            let notificationsMeta= await db.getData(NotificationsTrack, {notificationType: "post"})
-
-
-            if(notificationsMeta.data.length == 0){
-                const message = {
-                    notification: {
-                      title: "Vendo",
-                      body: "Neues bei den Produkten in den Shops!",
-                    },
-                    topic: "new_product",
-                  };
-                  try {
-                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
-                    const response = await admin.messaging().send(message);
-                    console.log(`Notification sent successfully: ${response}`);
-                  } catch (error) {
-                    console.log(`Error sending notification: ${error}`);
-                  }
-            }else{
-
-                const lastNotification = new Date(notificationsMeta.data[0].lastNotification).getTime()/1000;
-                const now = new Date();
-                const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).getTime()/1000;
-                const fourHoursInMilliseconds = 4 * 60 * 60 * 1000;
-                
-                console.log("lastNotification", lastNotification, "now", now, "fourHoursAgo", fourHoursAgo, lastNotification < fourHoursAgo);
-
-                if((now.getTime()/1000 - lastNotification) <= fourHoursInMilliseconds){
-                      // Send the push notification
-
-                    const message = {
-                        notification: {
-                        title: "Vendo",
-                        body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
-                    },
-                        topic: "new_post",
-                    };
-    
-                    try {
-                        const response = await admin.messaging().send(message);
-                        console.log(`Notification sent successfully: ${response}`);
-
-                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
-                    } catch (error) {
-                        console.log(`Error sending notification: ${error}`);
-                    }
-                 }
-                 else{
-                    console.log("Notification was sent less than 4 hours ago.");
-                 }
-            }
+            
 
             // const message = {
             //     notification: {
