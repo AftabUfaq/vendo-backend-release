@@ -1106,8 +1106,8 @@ router.post("/placeOrder/", async (req, res) => {
         let mailDetails = {
           // from: "support@sicorpindia.com",
           from: "support@mein-vendo.de",
-          // to: provider.data[0].email,
-          to: "haiderzamanyzi@gmail.com",
+          to: provider.data[0].email,
+         // to: "haiderzamanyzi@gmail.com",
 
           //to : 'shreya@brainiuminfotech.com',
 
