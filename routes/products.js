@@ -190,7 +190,7 @@ router.post('/add_product/', validation, (req, res) => {
                     topic: "new_product",
                   };
                   try {
-                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:   Math.floor(new Date().getTime()/1000)}).save();
                     const response = await admin.messaging().send(message);
                     console.log(`Notification sent successfully: ${response}`);
                   } catch (error) {
@@ -220,7 +220,7 @@ router.post('/add_product/', validation, (req, res) => {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
 
-                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  Math.floor(new Date().getTime()/1000)});
                     } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                     }
