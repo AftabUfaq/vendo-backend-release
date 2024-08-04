@@ -174,12 +174,12 @@ router.post("/add_user/", validation, (req, res) => {
                 const message = {
                     notification: {
                       title: "Vendo",
-                      body: "Neues bei den Produkten in den Shops!",
+                      body: "Neuer Anbieter bei VENDO!",
                     },
-                    topic: "new_product",
+                    topic: "new_provider",
                   };
                   try {
-                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:   Math.floor(new Date().getTime()/1000)}).save();
                     const response = await admin.messaging().send(message);
                     console.log(`Notification sent successfully: ${response}`);
                   } catch (error) {
@@ -200,7 +200,7 @@ router.post("/add_user/", validation, (req, res) => {
                       const message = {
                         notification: {
                           title: "Vendo",
-                          body: "Ein neuer Anbieter dabei! Wer mag das wohl diesmal sein?",
+                          body: "Neuer Anbieter bei VENDO!",
                         },
                         topic: "new_provider",
                       };
@@ -208,7 +208,7 @@ router.post("/add_user/", validation, (req, res) => {
                       try {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
-                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  Math.floor(new Date().getTime()/1000)});
                       } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                       }
@@ -785,12 +785,12 @@ router.post("/addPRFeedData", validation, async (req, res) => {
                 const message = {
                     notification: {
                       title: "Vendo",
-                      body: "Neues bei den Produkten in den Shops!",
+                      body: "Neuigkeiten bei VENDO!",
                     },
-                    topic: "new_product",
+                    topic: "new_post",
                   };
                   try {
-                    await new NotificationsTrack({ notificationType: "product", lastNotification:  new Date().toISOString()}).save();
+                    await new NotificationsTrack({ notificationType: "product", lastNotification:  Math.floor(new Date().getTime()/1000)}).save();
                     const response = await admin.messaging().send(message);
                     console.log(`Notification sent successfully: ${response}`);
                   } catch (error) {
@@ -811,7 +811,7 @@ router.post("/addPRFeedData", validation, async (req, res) => {
                     const message = {
                         notification: {
                         title: "Vendo",
-                        body: "Es wurde etwas Neues gepostet, schnell mal reinschauen!",
+                        body: "Neuigkeiten bei VENDO!",
                     },
                         topic: "new_post",
                     };
@@ -820,7 +820,7 @@ router.post("/addPRFeedData", validation, async (req, res) => {
                         const response = await admin.messaging().send(message);
                         console.log(`Notification sent successfully: ${response}`);
 
-                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  new Date().getTime()/1000});
+                        await db.updateOneData(NotificationsTrack, {notificationType: "product"}, {lastNotification:  Math.floor(new Date().getTime()/1000)});
                     } catch (error) {
                         console.log(`Error sending notification: ${error}`);
                     }
