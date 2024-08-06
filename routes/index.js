@@ -61,6 +61,10 @@ const validation = (req, res, next) => {
   }
 };
 
+router.get("/", (req,res)=>{
+  return res.json({msg: "OKAY"})
+})
+
 router.get("/categories", async (req, res, next) => {
   let resBody = {
     result: [],
