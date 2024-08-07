@@ -143,7 +143,7 @@ const checkUserDailyLimit = async (userId) => {
         $lte: endOfToday,
       },
     });
-    if (count.data.length >= 500) {
+    if (count.data.length >= 5) {
       return true;
     }
     return false;
