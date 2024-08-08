@@ -1136,7 +1136,6 @@ router.post("/placeOrder/", async (req, res) => {
   } catch (e) {
     console.log("Error", e);
     resBody.msg = "Something went wrong";
-    resBody.d= ht1;
   }
   return res.send(JSON.stringify(resBody));
 });
