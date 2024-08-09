@@ -548,27 +548,10 @@ router.post("/placeOrder/", async (req, res) => {
     var t_hours = today.getHours();
     var t_minutes = today.getMinutes();
     var strTime = t_hours + ":" + t_minutes;
-
-    var str1 = provider.data[0].openTime;
-    var str2 = provider.data[0].closeTime;
-    let date_ob = new Date();
-
-    let hours = date_ob.getHours();
-    let minutes = date_ob.getMinutes();
-
-    var str3 = hours + ":" + minutes;
-
-    str1 = str1.split(":");
-    str2 = str2.split(":");
-    str3 = str3.split(":");
-
-    totalSeconds1 = parseInt(str1[0] * 3600 + str1[1] * 60 + str1[0]);
-    totalSeconds2 = parseInt(str2[0] * 3600 + str2[1] * 60 + str2[0]);
-    totalSeconds3 = parseInt(str3[0] * 3600 + str3[1] * 60 + str3[0]);
-
+    
     // compare them
 
-    if (totalSeconds1 <= totalSeconds3 && totalSeconds2 >= totalSeconds3) {
+    if (true) {
       let { data, error } = await db.insertOneData(TransactionModel, {
         _products: products,
         _productIds: productIds,
