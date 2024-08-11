@@ -339,107 +339,75 @@ router.post('/placeOrder/', async (req, res) => {
     result: [],
     msg: "",
     status: false
-  }
+  };
 
   try {
-    let cid = null
-    let pid = null
-    // let providerEmail = ""
-    let products = []
-    
-    let productIds = []
-    let ht1 = `<tr><td colspan="3" style="padding: 10px 15px 0px 15px;"><table style="width: 100%; background: #4f9567;"><tr><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; width: 150px;">Menge</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 30px; text-align: left;">Produkt</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; text-align: right;">Preis</td></tr>`;
-    if (req.body.products != undefined && (req.body.products || []).length > 0) {
-      req.body.products.forEach(async (i) => {
-        // let product1 =  db.getData(ProductModel, {id: i.productId }, {_id: 0, id: "$_id", name: 1})
-        let product1 = await ProductModel.findById(i.productId, {_id: 0, id: "$_id", name: 1,inStock:1});
-        console.log(product1);
-        if(Number(product1.inStock)<Number(i.quantity)){
-          resBody.msg = "Ausverkauft"
-          res.send(JSON.stringify(resBody))
-          return false
-        }
-        let inStock = Number(product1.inStock)-Number(i.quantity)
-        await ProductModel.findByIdAndUpdate(i.productId,{inStock:inStock})
-        // db.updateOneData(ProductModel,{id: i.productId },{inStock:product1})
-        //   let { data, error } = db.getPopulatedData(ProductModel, { _id: i.productId }, "_provider", { _id: 0, id: "$_id", logo: "$logo.url", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1 }, {
-        //     _id: 0, id: "$_id", name: 1, deactivate: 1, maxQuantity: 1, category: 1, size: 1, ingredients: 1, status: 1, shortDescription: 1, longDescription: 1, productImage: "$productImage.url", price: 1
-        // })
+    let cid = req.body.cid ? new ObjectId(req.body.cid) : null;
+    let pid = req.body.pid ? new ObjectId(req.body.pid) : null;
 
-        ht1 = ht1 + `<tr><td style="font-size: 15px; padding: 10px 10px; color: #fff;">${i.quantity}x</td><td style="font-size: 15px; padding: 10px 30px; color: #fff; text-align: left;">${i.productName}</td><td style="font-size: 15px; padding: 10px 10px; color: #fff; text-align: right;">${(Number(i.price.replace(',','.'))*Number(i.quantity)).toFixed(2).toString().replace('.',',')} €</td></tr>`;
+    if (!pid) {
+      resBody.msg = "Please send Provider ID";
+      return res.send(JSON.stringify(resBody));
+    }
+
+    const provider = await db.getData(ProviderModel, { _id: req.body.pid }, {/* projection fields */});
+
+    if (provider.data[0].availability === false) {
+      resBody.msg = "Der Anbieter ist derzeit geschlossen.";
+      return res.send(JSON.stringify(resBody));
+    }
+
+    if (!cid) {
+      resBody.msg = "Please send Customer ID";
+      return res.send(JSON.stringify(resBody));
+    }
+
+    let products = [];
+    let productIds = [];
+    let ht1 = `<tr><td colspan="3" style="padding: 10px 15px 0px 15px;"><table style="width: 100%; background: #4f9567;"><tr><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; width: 150px;">Menge</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 30px; text-align: left;">Produkt</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; text-align: right;">Preis</td></tr>`;
+
+    if (req.body.products && req.body.products.length > 0) {
+      const productUpdates = req.body.products.map(async (i) => {
+        let product1 = await ProductModel.findById(i.productId, {_id: 0, id: "$_id", name: 1, inStock: 1});
+        
+        if (Number(product1.inStock) < Number(i.quantity)) {
+          resBody.msg = "Ausverkauft";
+          throw new Error("Out of stock");
+        }
+        
+        let inStock = Number(product1.inStock) - Number(i.quantity);
+        await ProductModel.findByIdAndUpdate(i.productId, { inStock: inStock });
+
+        ht1 += `<tr><td style="font-size: 15px; padding: 10px 10px; color: #fff;">${i.quantity}x</td><td style="font-size: 15px; padding: 10px 30px; color: #fff; text-align: left;">${i.productName}</td><td style="font-size: 15px; padding: 10px 10px; color: #fff; text-align: right;">${(Number(i.price.replace(',','.'))*Number(i.quantity)).toFixed(2).toString().replace('.',',')} €</td></tr>`;
         
         products.push({
           _product: new ObjectId(i.productId),
           _quantity: i.quantity,
           _price: i.price
-        })
-        productIds.push(new ObjectId(i.productId))
-      })
-      ht1 = ht1 + `</table></td></tr>`
+        });
+        productIds.push(new ObjectId(i.productId));
+      });
+
+      await Promise.all(productUpdates);
+      ht1 += `</table></td></tr>`;
     } else {
-      resBody.msg = "No product selected"
-      res.send(JSON.stringify(resBody))
-      return false
+      resBody.msg = "No product selected";
+      return res.send(JSON.stringify(resBody));
     }
 
-    // console.log(products)
-
-    if (req.body.cid != undefined) {
-      cid = new ObjectId(req.body.cid)
-    } else {
-      resBody.msg = "Please send Customer ID"
-      res.send(JSON.stringify(resBody))
-      return false
-    }
-
-    if (req.body.pid != undefined) {
-      pid = new ObjectId(req.body.pid)
-    } else {
-      resBody.msg = "Please send Provider ID"
-      res.send(JSON.stringify(resBody))
-      return false
-    }
-
-    var customer_details = await CustomerModel.findOne({ "_id": req.body.cid }).exec();
-
-    // if (req.body.providerEmail != undefined) {
-    //   providerEmail = req.body.providerEmail
-    // } else {
-    //   resBody.msg = "Please send Provider email"
-    //   res.send(JSON.stringify(resBody))
-    //   return false
-    // }
-    let provider = await db.getData(ProviderModel, { _id: pid }, { _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1, iswelcome: 1, community: 1, description: 1, Imprint: 1 })
-    //   let { provider, error1 } = await db.getData(ProviderModel, { _id: pid }, {
-    //     _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1,iswelcome:1,community:1,description:1,Imprint:1,openTime:1,closeTime:1
-    // })
+    var customer_details = await CustomerModel.findOne({ "_id": cid }).exec();
 
     const today = new Date();
     var fromatted_date = today.toLocaleDateString('de-DE', { weekday: "long", year: "numeric", month: "short", day: "numeric" });
+    var strTime = today.getHours() + ':' + today.getMinutes();
 
-    var t_hours = today.getHours();
-    var t_minutes = today.getMinutes();
-    var strTime = t_hours + ':' + t_minutes;
+    var openTime = provider.data[0].openTime.split(':').map(Number);
+    var closeTime = provider.data[0].closeTime.split(':').map(Number);
+    var currentTime = [today.getHours(), today.getMinutes()].map(Number);
 
-
-    var str1 = provider.data[0].openTime;
-    var str2 = provider.data[0].closeTime;
-    let date_ob = new Date();
-
-    let hours = date_ob.getHours();
-    let minutes = date_ob.getMinutes();
-
-    var str3 = hours + ':' + minutes;
-
-    str1 = str1.split(':');
-    str2 = str2.split(':');
-    str3 = str3.split(':');
-
-    totalSeconds1 = parseInt(str1[0] * 3600 + str1[1] * 60 + str1[0]);
-    totalSeconds2 = parseInt(str2[0] * 3600 + str2[1] * 60 + str2[0]);
-    totalSeconds3 = parseInt(str3[0] * 3600 + str3[1] * 60 + str3[0]);
-
-    // compare them
+    let totalSeconds1 = openTime[0] * 3600 + openTime[1] * 60;
+    let totalSeconds2 = closeTime[0] * 3600 + closeTime[1] * 60;
+    let totalSeconds3 = currentTime[0] * 3600 + currentTime[1] * 60;
 
     if (totalSeconds1 <= totalSeconds3 && totalSeconds2 >= totalSeconds3) {
       let { data, error } = await db.insertOneData(TransactionModel, {
@@ -456,66 +424,46 @@ router.post('/placeOrder/', async (req, res) => {
         notes: req.body.notes || "",
         address: req.body.address || "",
         deliveryMode: req.body.deliveryMode || ""
-      })
-
-      console.log(data, error)
+      });
 
       if (error === null) {
-        let cleanCart = await db.updateOneDataPush(CustomerModel, { _id: cid }, {
-          "_cart": []
-        }, {})
+        await db.updateOneDataPush(CustomerModel, { _id: cid }, { "_cart": [] }, {});
 
+        let transactionID = (JSON.parse(JSON.stringify(data)) || {})._id;
 
-        //  let provider = await db.getData(ProviderModel, { _id: pid }, {})
+        var p_mode = req.body.paymentMode === 'cash' ? 'Barzahlung' : req.body.paymentMode;
 
-        let transactionID = (JSON.parse(JSON.stringify(data)) || {})._id
-        console.log("Order transaction id -", transactionID)
-
-        if (req.body.paymentMode == 'cash') {
-          var p_mode = 'Barzahlung';
-        } else {
-          var p_mode = req.body.paymentMode;
-        }
-
-        let ht = `<html lang="en"><head><meta charset="utf-8"></head><body><table style="background-color: #fff; padding: 0px; margin: 50px auto 50px auto; max-width: 600px; width: 100%; box-shadow: 0 0 10px #85749e;"><tbody><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestelldatum:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestellzeit:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestell ID:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${fromatted_date}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${strTime}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${transactionID}</td></tr><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bezahlart:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${p_mode}</td></tr><tr><td colspan="3" style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold;">Kundendaten:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Name: ${customer_details.name}</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">${req.body.deliveryMode==='Abholung'?'Telefonnummer:':'Adresse:'} ${req.body.address}</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Liefermodus: ${req.body.deliveryMode}</td></tr><tr><td colspan="3" style=" font-size: 23px; padding: 15px; color: #245635; font-weight: bold;">Bestellinformation:</td></tr>`;
-
-
-        ht = ht + ht1;
-        ht = ht + `<tr><td colspan="3" style="padding: 0px 15px 0px 15px;"><table style="width: 100%; background: #1f5632;"><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff; width: 150px;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;">Zwischensumme</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;">${(Number(req.body.totalPrice.replace(',','.'))-Number(req.body.deliveryCost.replace(',','.'))).toString().replace('.',',')} €</td></tr><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff; width: 150px;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;">Lieferkosten</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;">${req.body.deliveryCost.replace('.',',')} €</td></tr><tr><td style="font-size: 15px; padding: 5px 10px; color: #fff;">&nbsp;</td><td style="font-size: 15px; padding: 5px 30px; color: #fff; text-align: left;"><strong>Gesamt</strong> inkl. MwSt.</td><td style="font-size: 15px; padding: 5px 10px; color: #fff; text-align: right;"><strong>${req.body.totalPrice.replace('.',',')} €</strong></td></tr></table></td></tr><tr><td colspan="3" style=" font-size: 22px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bemerkung vom Kunden:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 3px;">${req.body.notes}</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Bestellung akzeptieren, bitte diesen Link anklicken, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=1&pid=` + pid + `&cid=` + cid + `&pname=` + provider.data[0].providerName + `'>Bestellung bestätigen</a></td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Bestellung ablehnen, bitte diesen Link anklicken, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 5px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=2&pid=` + pid + `&cid=` + cid + `&pname=` + provider.data[0].providerName + `'>Bestellung ablehnen</a></td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;">Wichtige Information: Sollten Sie die Bestellung ablehnen und der Kunde hat über die Bezahlart Paypal schon bezahlt, sind Sie verpflichtet sich mit dem Kunden umgehend in Verbindung zusetzen und ihm/ihr das Geld  zurückzuerstatten</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #245635; font-weight: bold; padding-bottom: 3px;">Die Bestellung ist nun unterwegs, der Kunde wird darüber informiert:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 10px;"><a href='https://www.mein-vendoapp.de:3001/sendnotification?type=3&pid=` + pid + `&cid=` + cid + `&pname=` + provider.data[0].providerName + `'>Auslieferung bestätigen</a></td></tr></tbody><tfoot style="background-color: #fff;"><tr><td colspan="3"><p style="font-size: 20px; color: #000; text-align: center;margin-bottom: 20px;margin-top: 20px; padding-bottom: 20px;">-Das ist keine Rechnung-</p></td></tr></tfoot></table></body></html>`;
+        let ht = `<html lang="en"><head><meta charset="utf-8"></head><body><table style="background-color: #fff; padding: 0px; margin: 50px auto 50px auto; max-width: 600px; width: 100%; box-shadow: 0 0 10px #85749e;"><tbody><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestelldatum:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestellzeit:</td><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bestell ID:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${fromatted_date}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${strTime}</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${transactionID}</td></tr><tr><td style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold; padding-bottom: 5px;">Bezahlart:</td></tr><tr><td style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 0px;">${p_mode}</td></tr><tr><td colspan="3" style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold;">Kundendaten:</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Name: ${customer_details.name}</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">${req.body.deliveryMode==='Abholung'?'Telefonnummer:':'Adresse:'} ${req.body.address}</td></tr><tr><td colspan="3" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Lieferart: ${req.body.deliveryMode}</td></tr><tr><td colspan="3" style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold;">Bestellte Produkte:</td></tr>${ht1}<tr><td colspan="3" style=" font-size: 20px; padding: 15px; color: #245635; font-weight: bold;">Zusammenfassung:</td></tr><tr><td colspan="2" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Zwischensumme:</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; text-align: right;">${req.body.totalPrice || "00.00"} €</td></tr><tr><td colspan="2" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Lieferkosten:</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; text-align: right;">${req.body.deliveryCost || "00.00"} €</td></tr><tr><td colspan="2" style=" font-size: 18px; padding: 0 15px; color: #424242; padding-bottom: 6px;">Gesamt:</td><td style=" font-size: 18px; padding: 0 15px; color: #424242; text-align: right;">${(Number(req.body.totalPrice || "0") + Number(req.body.deliveryCost || "0")).toFixed(2).toString().replace('.',',')} €</td></tr></tbody></table></body></html>`;
+        
         let mailDetails = {
           from: 'support@taskdone-app.de',
           to: provider.data[0].email,
           //to : 'shreya@brainiuminfotech.com',
 
-          //subject: `A new order has been placed | ${transactionID}`,
-          subject: `A new order has been placed`,
+          //subject: A new order has been placed | ${transactionID},
+          subject: "A new order has been placed",
           html: ht
         };
+        sendMail(mailDetails);
 
-        sendMail(mailDetails)
-          .then(async (d) => {
-            console.log("Mail sent")
-          })
-          .catch(err => {
-            console.log(err)
-          })
+        resBody.result = data;
+        resBody.status = true;
+        resBody.msg = "Order placed successfully";
+        res.send(JSON.stringify(resBody));
       } else {
-        resBody.msg = "Unable to place order"
+        resBody.msg = "Error while placing order";
+        res.send(JSON.stringify(resBody));
       }
+    } else {
+      resBody.msg = "Der Anbieter ist derzeit geschlossen.";
+      res.send(JSON.stringify(resBody));
     }
-    else {
-      //resBody.msg = "Cannot cater now as order is closed. Shall cater on next day"
-      resBody.msg = "Du bestellst außerhalb der Öffnungszeiten. Dies ist nicht möglich, die Bestellung wurde nicht ausgeführt"
-    }
-    resBody.status = true
-    resBody.result = "Order Placed"
-  } catch (e) {
-    console.log("Error", e)
-    resBody.msg = "Something went wrong"
-
+  } catch (error) {
+    resBody.msg = error.message || "An error occurred";
+    res.send(JSON.stringify(resBody));
   }
-  res.send(JSON.stringify(resBody))
-})
+});
+
 
 router.get('/getAllTransactions/', validation, async (req, res) => {
   let resBody = {
