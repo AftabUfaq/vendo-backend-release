@@ -342,10 +342,20 @@ router.post('/placeOrder/', async (req, res) => {
   }
 
   try {
-    let cid = null
-    let pid = null
     // let providerEmail = ""
     let products = []
+
+    if (!req.body.pid) {
+      resBody.msg = "Please send Provider ID";
+      return res.send(JSON.stringify(resBody));
+    }
+
+    let provider = await db.getData(ProviderModel, { _id: req.body.pid }, { _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1, iswelcome: 1, community: 1, description: 1, Imprint: 1 }) 
+
+    if (provider.data[0].availability === false) {
+      resBody.msg = "Der Anbieter ist derzeit geschlossen.";
+      return res.send(JSON.stringify(resBody));
+    }
     
     let productIds = []
     let ht1 = `<tr><td colspan="3" style="padding: 10px 15px 0px 15px;"><table style="width: 100%; background: #4f9567;"><tr><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; width: 150px;">Menge</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 30px; text-align: left;">Produkt</td><td style="background: #1f5632; font-size: 16px; color: #fff; font-weight: bold; padding: 5px 10px; text-align: right;">Preis</td></tr>`;
@@ -409,7 +419,6 @@ router.post('/placeOrder/', async (req, res) => {
     //   res.send(JSON.stringify(resBody))
     //   return false
     // }
-    let provider = await db.getData(ProviderModel, { _id: pid }, { _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1, iswelcome: 1, community: 1, description: 1, Imprint: 1 })
     //   let { provider, error1 } = await db.getData(ProviderModel, { _id: pid }, {
     //     _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1,iswelcome:1,community:1,description:1,Imprint:1,openTime:1,closeTime:1
     // })
@@ -516,6 +525,7 @@ router.post('/placeOrder/', async (req, res) => {
   }
   res.send(JSON.stringify(resBody))
 })
+
 
 router.get('/getAllTransactions/', validation, async (req, res) => {
   let resBody = {
