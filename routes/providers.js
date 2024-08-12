@@ -57,32 +57,32 @@ const generateOrQuery = (req) => {
 };
 
 const validation = (req, res, next) => {
-  let token = req.headers["x-request-token"] || null;
-  console.log("token", token);
-  try {
-    if (token === null) {
-      res.send(
-        JSON.stringify({
-          result: [],
-          msg: "You are not logged in",
-          status: false,
-        })
-      );
-      return false;
-    }
-    var decoded = jwt.verify(token, "67TYGHRE99UISFD890U43JHRWERTYDGH");
-    console.log(decoded);
+  // let token = req.headers["x-request-token"] || null;
+  // console.log("token", token);
+  // try {
+  //   if (token === null) {
+  //     res.send(
+  //       JSON.stringify({
+  //         result: [],
+  //         msg: "You are not logged in",
+  //         status: false,
+  //       })
+  //     );
+  //     return false;
+  //   }
+  //   var decoded = jwt.verify(token, "67TYGHRE99UISFD890U43JHRWERTYDGH");
+   // console.log(decoded);
     next();
-  } catch (err) {
-    console.log(err.message);
-    res.send(
-      JSON.stringify({
-        result: [],
-        msg: err.message || "something went wrong",
-        status: false,
-      })
-    );
-  }
+  // } catch (err) {
+  //   console.log(err.message);
+  //   res.send(
+  //     JSON.stringify({
+  //       result: [],
+  //       msg: err.message || "something went wrong",
+  //       status: false,
+  //     })
+  //   );
+  // }
 };
 
 const uploadImage = async (base64image, fieldname) => {

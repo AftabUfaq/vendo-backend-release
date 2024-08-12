@@ -32,25 +32,25 @@ const initfirebase = () => {
 initfirebase();
 
 const validation = (req, res, next) => {
-  let token = req.headers["x-request-token"] || null
-   try {
-    if (token === null) {
-      res.send(JSON.stringify({
-        result: [],
-        msg: "You are not logged in",
-        status: false
-      }))
-      return false
-    }
-    var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
+  // let token = req.headers["x-request-token"] || null
+  //  try {
+  //   if (token === null) {
+  //     res.send(JSON.stringify({
+  //       result: [],
+  //       msg: "You are not logged in",
+  //       status: false
+  //     }))
+  //     return false
+  //   }
+  //  var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
     next()
-  } catch (err) {
-    res.send(JSON.stringify({
-      result: [],
-      msg: err.message || "something went wrong",
-      status: false
-    }))
-  }
+  // } catch (err) {
+  //   res.send(JSON.stringify({
+  //     result: [],
+  //     msg: err.message || "something went wrong",
+  //     status: false
+  //   }))
+  // }
 }
 
 router.get('/categories', async (req, res, next) => {

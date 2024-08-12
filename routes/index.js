@@ -33,32 +33,32 @@ initfirebase();
 
 
 const validation = (req, res, next) => {
-  let token = req.headers["x-request-token"] || null;
-  console.log(token);
-  try {
-    if (token === null) {
-      res.send(
-        JSON.stringify({
-          result: [],
-          msg: "You are not logged in",
-          status: false,
-        })
-      );
-      return false;
-    }
-    var decoded = jwt.verify(token, "67TYGHRE99UISFD890U43JHRWERTYDGH");
-    console.log(decoded);
+  // let token = req.headers["x-request-token"] || null;
+  // console.log(token);
+  // try {
+  //   if (token === null) {
+  //     res.send(
+  //       JSON.stringify({
+  //         result: [],
+  //         msg: "You are not logged in",
+  //         status: false,
+  //       })
+  //     );
+  //     return false;
+  //   }
+  //   var decoded = jwt.verify(token, "67TYGHRE99UISFD890U43JHRWERTYDGH");
+  //   console.log(decoded);
     next();
-  } catch (err) {
-    console.log(err.message);
-    res.send(
-      JSON.stringify({
-        result: [],
-        msg: err.message || "something went wrong",
-        status: false,
-      })
-    );
-  }
+  // } catch (err) {
+  //   console.log(err.message);
+  //   res.send(
+  //     JSON.stringify({
+  //       result: [],
+  //       msg: err.message || "something went wrong",
+  //       status: false,
+  //     })
+  //   );
+  // }
 };
 
 router.get("/categories", async (req, res, next) => {
@@ -548,7 +548,7 @@ router.post("/placeOrder/", async (req, res) => {
     var t_hours = today.getHours();
     var t_minutes = today.getMinutes();
     var strTime = t_hours + ":" + t_minutes;
-    
+
     // compare them
 
     if (true) {
@@ -780,7 +780,7 @@ router.post("/placeOrder/", async (req, res) => {
             "
           >
             ${ req.body.deliveryMode === "Abholung" ? "Telefonnummer:" :
-            "Adresse:" } ${ req.body.address }
+            "Adresse:" } ${ req.body.deliveryMode === "Abholung" ? req.body.phone : req.body.address }
           </td>
         </tr>
         <tr>
