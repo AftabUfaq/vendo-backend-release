@@ -533,9 +533,10 @@ router.post("/placeOrder/", async (req, res) => {
         Imprint: 1,
       }
     );
-    //   let { provider, error1 } = await db.getData(ProviderModel, { _id: pid }, {
-    //     _id: 0, id: "$_id", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, logo: "$logo.url", deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1, deliveryCost: 1, minOrderCost: 1, openTime: 1, closeTime: 1, orderStartDay: 1, orderEndDay: 1, paypalClientSecret: 1, paypalClientId: 1, deliveryCircle: 1, deliveryApproxTime: 1,iswelcome:1,community:1,description:1,Imprint:1,openTime:1,closeTime:1
-    // })
+    if (provider.data[0].availability === false) {
+      resBody.msg = "Der Anbieter ist derzeit geschlossen.";
+      return res.send(JSON.stringify(resBody));
+    }
 
     const today = new Date();
     var fromatted_date = today.toLocaleDateString("de-DE", {

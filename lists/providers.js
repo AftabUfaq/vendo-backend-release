@@ -142,7 +142,7 @@ const providerSchema = new Schema({
     type: String,
   },
 
-  availability: { type: Boolean },
+  availability: { type: Boolean, default:true },
   deactivate: { type: Boolean, default: false },
   iswelcome: { type: Boolean, default: false },
   community: { type: String },
