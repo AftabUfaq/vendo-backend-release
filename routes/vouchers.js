@@ -723,7 +723,7 @@ router.post('/collectVoucher_old/', validation, async (req, res) => {
 
 });
 
-router.post('/collectVoucher/', validation, async (req, res) => {
+router.post('/collectVoucher/', async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
@@ -731,11 +731,60 @@ router.post('/collectVoucher/', validation, async (req, res) => {
     }
 
     try {
+        
+        let customerId = req.body.cid;
+        let providerId = req.body.pid; 
+        let voucherId = req.body.vid;
+
+        if(!customerId || !providerId || !voucherId){
+            
+            resBody.msg= "Please make sure to provide customer id, provider id and voucher id.";
+
+            res.send(JSON.stringify(resBody))
+
+            return false
+        }
+        
+        
+        
         let query = {
             _id: new ObjectId(req.body.vid), quantity: { $gte: 1 }, deactivate: false
         }
+        
+        const getVoucher = await db.getData(VoucherModel, query, { _id: 1, isUnique: 1 })
+        
+        if(getVoucher.data.length < 1){
+            resBody.msg = "Voucher not found, pleas double check your request.."
+                
+            res.send(JSON.stringify(resBody))
 
-        const getVoucher = await db.getData(VoucherModel, query, { _id: 1 })
+            return false
+        }
+
+        // check to see if the voucher is unique and is already taken by the user
+        if(getVoucher.data[0].isUnique){
+            
+
+
+            // check for voucherTransaction
+            const transactionOfTheVoucher= await db.getData(VoucherTransactionModel, {
+                _voucher: new ObjectId(req.body.vid),
+                _customer: new ObjectId(req.body.cid)
+            }) 
+
+
+
+            if(transactionOfTheVoucher.data.length > 0){
+                
+
+                resBody.msg = "Der Gutschein ist nicht mehr verfügbar.."
+                
+                res.send(JSON.stringify(resBody))
+
+                return false
+            }
+        }
+
 
         if (getVoucher.error !== null || getVoucher.data.length <= 0) {
             resBody.msg = "Voucher is not available at the moment"

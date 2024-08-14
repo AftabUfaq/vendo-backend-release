@@ -45,6 +45,8 @@ const voucherSchema = new Schema({
         type: Schema.ObjectId, ref: 'Vouchertransaction'
     }],
 
+    isUnique: { type: Boolean, default: false },
+
     activeImage: {},
     
     inactiveImage: {},
