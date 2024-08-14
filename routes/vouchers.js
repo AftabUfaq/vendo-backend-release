@@ -723,7 +723,7 @@ router.post('/collectVoucher_old/', validation, async (req, res) => {
 
 });
 
-router.post('/collectVoucher/', async (req, res) => {
+router.post('/collectVoucher/', validation,async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
