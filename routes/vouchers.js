@@ -8,7 +8,7 @@ const VoucherTransactionModel = require('../lists/voucherTransaction')
 const ProviderModel = require('../lists/providers')
 const CustomerModel = require('../lists/customers')
 const db = require('../database/mongooseCrud')
-
+const moment = require("moment")
 const multer = require('multer');
 
 var size = 2 * 1024 * 1024;
@@ -50,28 +50,7 @@ const generateOrQuery = (req) => {
 }
 
 const validation = (req, res, next) => {
-    // let token = req.headers["x-request-token"] || null
-    // console.log(token)
-    // try {
-    //     if (token === null) {
-    //         res.send(JSON.stringify({
-    //             result: [],
-    //             msg: "You are not logged in",
-    //             status: false
-    //         }))
-    //         return false
-    //     }
-    //     var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
-    //     console.log(decoded)
-        next()
-    // } catch (err) {
-    //     console.log(err.message)
-    //     res.send(JSON.stringify({
-    //         result: [],
-    //         msg: err.message || "something went wrong",
-    //         status: false
-    //     }))
-    // }
+    next()    
 }
 
 router.post('/add_voucher/', validation, (req, res) => {
@@ -296,12 +275,11 @@ router.get('/getOneVoucher/:id', validation, async (req, res) => {
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
 
-                let firstDate = new Date(data[i].startDate),
-                    secondDate = new Date(data[i].endDate),
-                    timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                //data1[j]=timeDifference1;
-                //j++;
-                if (timeDifference >= 0 && timeDifference1 <= 0) {
+                const currentDate = moment().startOf('day');;
+                const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                    delete data[i]._provider
                     data1[j] = data[i];
                     j++;
                 }
@@ -337,16 +315,7 @@ router.get('/getAllVoucher/', validation, async (req, res) => {
         })
         var data1 = [];
         if (error === null) {
-            //             for(var i=0;i<data.length;i++){
-
-            //                 let firstDate = new Date(data[i].startDate),
-            //                     secondDate = new Date(data[i].endDate),
-            // timeDifference = Math.abs(secondDate.getTime() - firstDate.getTime());
-            //                 if(timeDifference>=0){
-            //                     data1[i]=data[i];
-            //                      }
-
-            //                     }
+            
             resBody.status = true
             resBody.result = data
         } else {
@@ -407,23 +376,14 @@ router.get('/getAllVoucherWithFilter/', validation, async (req, res) => {
         })
         var data1 = [];
         var j = 0;
-        let date_ob = new Date();
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let year = date_ob.getFullYear();
-
-
-        // prints date in YYYY-MM-DD format
-        let cdate = new Date(year + "-" + month + "-" + date);
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
 
-                let firstDate = new Date(data[i].startDate),
-                    secondDate = new Date(data[i].endDate),
-                    timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                //data1[j]=timeDifference1;
-                //j++;
-                if (timeDifference >= 0 && timeDifference1 <= 0) {
+                const currentDate = moment().startOf('day');;
+                const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                    delete data[i]._provider
                     data1[j] = data[i];
                     j++;
                 }
@@ -491,24 +451,14 @@ router.get('/getAllVoucherByProvider/', async (req, res) => {
             _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _customer: 1, iswelcome: 1
         })
         var data1 = [];
-        var j = 0;
-        let date_ob = new Date();
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let year = date_ob.getFullYear();
-
-
-        // prints date in YYYY-MM-DD format
-        let cdate = new Date(year + "-" + month + "-" + date);
+        var j = 0;      
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
-
-                let firstDate = new Date(data[i].startDate),
-                    secondDate = new Date(data[i].endDate),
-                    timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                //data1[j]=timeDifference1;
-                //j++;
-                if (timeDifference >= 0 && timeDifference1 <= 0) {
+                const currentDate = moment().startOf('day');;
+                const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                    delete data[i]._provider
                     data1[j] = data[i];
                     j++;
                 }
@@ -555,23 +505,13 @@ router.get('/getAllVoucherByCustomerProvider/', validation, async (req, res) => 
         })
         var data1 = [];
         var j = 0;
-        let date_ob = new Date();
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let year = date_ob.getFullYear();
-
-
-        // prints date in YYYY-MM-DD format
-        let cdate = new Date(year + "-" + month + "-" + date);
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
-
-                let firstDate = new Date(data[i].startDate),
-                    secondDate = new Date(data[i].endDate),
-                    timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                //data1[j]=timeDifference1;
-                //j++;
-                if (timeDifference >= 0 && timeDifference1 <= 0) {
+                const currentDate = moment().startOf('day');;
+                const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                    delete data[i]._provider
                     data1[j] = data[i];
                     j++;
                 }
@@ -613,23 +553,14 @@ router.get('/getVouchersWithLimit/', async (req, res) => {
 
         var data1 = [];
         var j = 0;
-        let date_ob = new Date();
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let year = date_ob.getFullYear();
-
-
-        // prints date in YYYY-MM-DD format
-        let cdate = new Date(year + "-" + month + "-" + date);
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
                 if (data[i].iswelcome == true && data[i].deactivate == false) {
-                    let firstDate = new Date(data[i].startDate),
-                        secondDate = new Date(data[i].endDate),
-                        timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                    //data1[j]=timeDifference1;
-                    //j++;
-                    if (timeDifference >= 0 && timeDifference1 <= 0) {
+                    const currentDate = moment().startOf('day');;
+                    const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                    const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                    if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                        delete data[i]._provider
                         data1[j] = data[i];
                         j++;
                     }

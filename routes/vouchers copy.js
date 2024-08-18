@@ -8,7 +8,7 @@ const VoucherTransactionModel = require('../lists/voucherTransaction')
 const ProviderModel = require('../lists/providers')
 const CustomerModel = require('../lists/customers')
 const db = require('../database/mongooseCrud')
-
+const moment = require("moment")
 const multer = require('multer');
 
 var size = 2 * 1024 * 1024;
@@ -492,25 +492,20 @@ router.get('/getAllVoucherByProvider/', async (req, res) => {
         })
         var data1 = [];
         var j = 0;
-        let date_ob = new Date();
-        let date = ("0" + date_ob.getDate()).slice(-2);
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-        let year = date_ob.getFullYear();
-
-
-        // prints date in YYYY-MM-DD format
-        let cdate = new Date(year + "-" + month + "-" + date);
         if (error === null) {
             for (var i = 0; i < data.length; i++) {
 
-                let firstDate = new Date(data[i].startDate),
-                    secondDate = new Date(data[i].endDate),
-                    timeDifference = cdate.getTime() - firstDate.getTime(), timeDifference1 = cdate.getTime() - secondDate.getTime();;
-                //data1[j]=timeDifference1;
-                //j++;
-                if (timeDifference >= 0 && timeDifference1 <= 0) {
+                const currentDate = moment().startOf('day');;
+                const startDate = moment(data[i].startDate ?? currentDate , "YYYY-MM-DD").startOf('day');;
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf('day');
+                if (currentDate.isBetween(startDate, endDate, 'day', '[]')) {
+                  
+                    console.log("Current date is between the start and end dates.");
+                    delete data[i]._provider
                     data1[j] = data[i];
                     j++;
+                } else {
+                    console.log("Current date is outside the start and end dates.", startDate, endDate, currentDate);
                 }
 
             }
