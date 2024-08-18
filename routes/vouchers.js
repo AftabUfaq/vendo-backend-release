@@ -50,28 +50,28 @@ const generateOrQuery = (req) => {
 }
 
 const validation = (req, res, next) => {
-    let token = req.headers["x-request-token"] || null
-    console.log(token)
-    try {
-        if (token === null) {
-            res.send(JSON.stringify({
-                result: [],
-                msg: "You are not logged in",
-                status: false
-            }))
-            return false
-        }
-        var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
-        console.log(decoded)
+    // let token = req.headers["x-request-token"] || null
+    // console.log(token)
+    // try {
+    //     if (token === null) {
+    //         res.send(JSON.stringify({
+    //             result: [],
+    //             msg: "You are not logged in",
+    //             status: false
+    //         }))
+    //         return false
+    //     }
+    //     var decoded = jwt.verify(token, '67TYGHRE99UISFD890U43JHRWERTYDGH');
+    //     console.log(decoded)
         next()
-    } catch (err) {
-        console.log(err.message)
-        res.send(JSON.stringify({
-            result: [],
-            msg: err.message || "something went wrong",
-            status: false
-        }))
-    }
+    // } catch (err) {
+    //     console.log(err.message)
+    //     res.send(JSON.stringify({
+    //         result: [],
+    //         msg: err.message || "something went wrong",
+    //         status: false
+    //     }))
+    // }
 }
 
 router.post('/add_voucher/', validation, (req, res) => {
@@ -248,7 +248,7 @@ router.get('/getOneVoucher1/:id', validation, async (req, res) => {
         var id = new ObjectId(req.params.id);
 
         let { data, error } = await db.getPopulatedData(VoucherModel, { _id: id }, "_provider", { _id: 0, id: "$_id", logo: "$logo.url", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1 }, {
-            _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _customer: 1, iswelcome: 1
+            _id: 0, id: "$_id", title: 1, deactivate: 1,isUnique:1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _customer: 1, iswelcome: 1
         })
 
         console.log(data, error)
@@ -279,7 +279,7 @@ router.get('/getOneVoucher/:id', validation, async (req, res) => {
         var id = new ObjectId(req.params.id);
 
         let { data, error } = await db.getPopulatedData(VoucherModel, { _id: id }, "_provider", { _id: 0, id: "$_id", logo: "$logo.url", email: 1, providerName: 1, postcode: 1, address: 1, region: 1, postcode: 1, branch: 1, telephone: 1, mobile: 1, domain: 1, deactivate: 1, emailVerified: 1, availability: 1, paypalMode: 1, cashMode: 1, flyer: "$flyer.url", category: 1, companyPresentation: "$companyPresentation.url", companyPresentationStartDay: 1, companyPresentationEndDay: 1, advertisement: "$advertisement.url", advertisementStartDay: 1, advertisementEndDay: 1, flyerStartDay: 1, flyerEndDay: 1, jobAdvertisement: "$jobAdvertisement.url", jobAdvertisementStartDay: 1, jobAdvertisementEndDay: 1, menu: "$menu.url", menuStartDay: 1, menuEndDay: 1, info: "$info.url", infoStartDay: 1, infoEndDay: 1, event: "$event.url", eventStartDay: 1, eventEndDay: 1, advertisingVideo: "$advertisingVideo.url", advertisingVideoStartDay: 1, advertisingVideoEndDay: 1 }, {
-            _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _customer: 1, iswelcome: 1
+            _id: 0, id: "$_id", title: 1,isUnique:1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _customer: 1, iswelcome: 1
         })
 
         console.log(data, error)
