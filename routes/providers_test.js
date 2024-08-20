@@ -1511,12 +1511,7 @@ router.put("/update-availability", async (req, res) => {
     const availabilities = req.body; // Expecting an array of objects
   
     try {
-      // Validate input
-    //   if (!Array.isArray(availabilities) || availabilities.length === 0) {
-    //     resBody.msg = "Input must be a non-empty array of availability objects.";
-    //     return res.status(400).json(resBody);
-    //   }
-  
+      // Loop through each availability object in the request body
       for (const { providerId, day, from, to } of availabilities) {
         // Validate each entry
         if (!providerId || !day || !from || !to) {
@@ -1524,31 +1519,35 @@ router.put("/update-availability", async (req, res) => {
           return res.status(400).json(resBody);
         }
   
-        console.log("given", providerId, day);
-  
-        // Find and update the availability entry
-        const availability = await ProviderAvailibility.findOne({
+        // Find the availability entry
+        let availability = await ProviderAvailibility.findOne({
           providerId: ObjectId(providerId),
           day,
         });
   
-        console.log("Availability", availability);
         if (availability) {
+          // Update the existing availability entry
           availability.from = from;
           availability.to = to;
-  
           await availability.save();
-  
-          resBody.result.push(availability);
         } else {
-          console.log("No availability found");
-          resBody.msg += `No availability found for provider ${providerId} on ${day}. `;
+          // Create a new availability entry if not found
+          availability = new ProviderAvailibility({
+            providerId: ObjectId(providerId),
+            day,
+            from,
+            to,
+          });
+          await availability.save();
         }
+  
+        // Add the updated or newly created availability to the result
+        resBody.result.push(availability);
       }
   
       if (resBody.result.length > 0) {
         resBody.status = true;
-        resBody.msg += "Availability updated successfully.";
+        resBody.msg = "Availability updated successfully.";
       } else {
         resBody.msg = "No availabilities were updated.";
       }
@@ -1559,6 +1558,7 @@ router.put("/update-availability", async (req, res) => {
       return res.status(500).json({ message: err.message });
     }
   });
+  
   
 
 module.exports = router;
