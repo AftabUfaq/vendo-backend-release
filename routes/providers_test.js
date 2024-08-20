@@ -1501,54 +1501,65 @@ router.post('/update_time_post', async (req, res) => {
 
 
 
-  router.put("/update-availability", async (req, res) => {
+router.put("/update-availability", async (req, res) => {
     let resBody = {
       result: [],
       msg: "",
       status: false,
     };
   
-    const { providerId, day, from, to } = req.body;
+    const availabilities = req.body; // Expecting an array of objects
   
     try {
       // Validate input
-      if (!providerId || !day || !from || !to) {
-        resBody.msg = "All fields (providerId, day, from, to) are required.";
-        return res.status(400).json(resBody);
+    //   if (!Array.isArray(availabilities) || availabilities.length === 0) {
+    //     resBody.msg = "Input must be a non-empty array of availability objects.";
+    //     return res.status(400).json(resBody);
+    //   }
+  
+      for (const { providerId, day, from, to } of availabilities) {
+        // Validate each entry
+        if (!providerId || !day || !from || !to) {
+          resBody.msg = "All fields (providerId, day, from, to) are required for each availability object.";
+          return res.status(400).json(resBody);
+        }
+  
+        console.log("given", providerId, day);
+  
+        // Find and update the availability entry
+        const availability = await ProviderAvailibility.findOne({
+          providerId: ObjectId(providerId),
+          day,
+        });
+  
+        console.log("Availability", availability);
+        if (availability) {
+          availability.from = from;
+          availability.to = to;
+  
+          await availability.save();
+  
+          resBody.result.push(availability);
+        } else {
+          console.log("No availability found");
+          resBody.msg += `No availability found for provider ${providerId} on ${day}. `;
+        }
       }
   
-      console.log("given",providerId, day)
-
-      // Find and update the availability entry
-      const Availability = await ProviderAvailibility.find({providerId: ObjectId(providerId), day});
-
-      console.log("Availability", Availability)
-      if(Availability){
-
-
-        Availability[0].from= from;
-        Availability[0].to= to;
-        
-        Availability[0].save();
-
-        resBody.result.push(Availability[0]);
+      if (resBody.result.length > 0) {
         resBody.status = true;
-        resBody.msg = "Availability updated successfully.";
-        return res.json(resBody);
-      }else{
-
-        console.log("outside")
-
-
-        resBody.msg = "No availability found for the given provider and day.";
-        return res.status(404).json(resBody);
+        resBody.msg += "Availability updated successfully.";
+      } else {
+        resBody.msg = "No availabilities were updated.";
       }
   
+      return res.json(resBody);
     } catch (err) {
       resBody.msg = "An error occurred while updating availability.";
       return res.status(500).json({ message: err.message });
     }
   });
+  
 
 module.exports = router;
 
