@@ -2125,4 +2125,62 @@ router.post("/create-availibility", async ()=>{
   }
 })
 
+router.put("/update-availability", async (req, res) => {
+  let resBody = {
+    result: [],
+    msg: "",
+    status: false,
+  };
+
+  const availabilities = req.body; // Expecting an array of objects
+
+  try {
+    // Loop through each availability object in the request body
+    for (const { providerId, day, from, to } of availabilities) {
+      // Validate each entry
+      if (!providerId || !day || !from || !to) {
+        resBody.msg = "All fields (providerId, day, from, to) are required for each availability object.";
+        return res.status(400).json(resBody);
+      }
+
+      // Find the availability entry
+      let availability = await ProviderAvailibility.findOne({
+        providerId: ObjectId(providerId),
+        day,
+      });
+
+      if (availability) {
+        // Update the existing availability entry
+        availability.from = from;
+        availability.to = to;
+        await availability.save();
+      } else {
+        // Create a new availability entry if not found
+        availability = new ProviderAvailibility({
+          providerId: ObjectId(providerId),
+          day,
+          from,
+          to,
+        });
+        await availability.save();
+      }
+
+      // Add the updated or newly created availability to the result
+      resBody.result.push(availability);
+    }
+
+    if (resBody.result.length > 0) {
+      resBody.status = true;
+      resBody.msg = "Availability updated successfully.";
+    } else {
+      resBody.msg = "No availabilities were updated.";
+    }
+
+    return res.json(resBody);
+  } catch (err) {
+    resBody.msg = "An error occurred while updating availability.";
+    return res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
