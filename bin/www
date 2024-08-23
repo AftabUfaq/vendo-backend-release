@@ -18,18 +18,16 @@ var fs = require('fs');
 var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
-if(process.env.NODE_ENV === 'PROD') {
-  var privateKey  = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.key.pem', 'utf8');
-  var certificate = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.crt.pem', 'utf8');
-  var credentials = {key: privateKey, cert: certificate};
-  var server = https.createServer(credentials, app);
-}
+var privateKey  = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.key.pem', 'utf8');
+var certificate = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.crt.pem', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+//var server = http.createServer(app);
+var server = https.createServer(credentials, app);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -42,7 +40,6 @@ server.on('listening', onListening);
 /**
  * Normalize a port into a number, string, or false.
  */
-
 
 function normalizePort(val) {
   var port = parseInt(val, 10);
