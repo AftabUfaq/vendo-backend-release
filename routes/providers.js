@@ -970,7 +970,7 @@ router.post("/deleteOneUser", validation, async (req, res) => {
   };
 
   try {
-    var id = new ObjectId(req.params.id);
+    var id = new ObjectId(req.body.id);
 
     let { data, error } = await db.deleteOne(ProviderModel, { _id: id });
 
