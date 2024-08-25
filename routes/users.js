@@ -36,7 +36,7 @@ const validation = (req, res, next) => {
     let token = req.headers["x-request-token"] || null
     try {
         if(token === null){
-            res.send(JSON.stringify({
+            res.status(5000).send(JSON.stringify({
                 result: [],
                 msg: "You are not logged in",
                 status: false
@@ -495,7 +495,7 @@ router.post('/deleteOneUser', validation, async (req, res) => {
     }
 
     try {
-        var id = new ObjectId(req.params.id);
+        var id = new ObjectId(req.body.id);
 
         let { data, error } = await db.deleteOne(CustomerModel, { _id: req.body.id })
 
