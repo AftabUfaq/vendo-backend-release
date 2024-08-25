@@ -329,6 +329,74 @@ router.get('/getAllVoucher/', validation, async (req, res) => {
 
     res.send(JSON.stringify(resBody))
 });
+router.get("/getAllVoucherMobile/", validation, async (req, res) => {
+    let resBody = {
+      result: [],
+      msg: "",
+      status: false,
+    };
+  
+    try {
+      const query = req.query || {};
+  
+      let { data, error } = await db.getPopulatedData(
+        VoucherModel,
+        query,
+        "_provider _customer"
+      );
+      var data1 = [];
+      let j = 0;
+      if (error === null) {
+        for (var i = 0; i < data.length; i++) {
+          const currentDate = moment().startOf("day");
+          const startDate = moment(
+            data[i].startDate ?? currentDate,
+            "YYYY-MM-DD"
+          ).startOf("day");
+          const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf("day");
+          if (currentDate.isBetween(startDate, endDate, "day", "[]") || true) {
+            let temp_data = {
+              title: data[i].title,
+              quantity: data[i].quantity,
+              voucherTaken: data[i].voucherTaken,
+              endDate: data[i].endDate,
+              shortDescription:data[i].shortDescription,
+              longDescription:data[i].longDescription,
+             // _customer: data[i]._customer,
+              _redeemedBy: data[i]._redeemedBy,
+              deactivate: data[i].deactivate,
+              iswelcome: data[i].iswelcome,
+              id: data[i].id,
+              isUnique:data[i].isUnique,
+              activeImage: data[i].activeImage.url,
+            inactiveImage: data[i].inactiveImage.url,
+            redemptionBarcode: data[i].redemptionBarcode.url
+              
+            };
+  
+            let provider_data = {
+              _id:data[i]._provider._id,
+              logo: data[i]._provider.logo.url,
+              providerName: data[i]._provider.providerName,
+            };
+          //  delete temp_data._provider;
+            temp_data._provider = provider_data
+            data1[j] = temp_data;
+            j++;
+          }
+        }
+        resBody.status = true;
+        resBody.result = data1;
+      } else {
+        resBody.msg = error.message;
+      }
+    } catch (e) {
+      console.log(e);
+      resBody.msg = "Something went wrong";
+    }
+  
+    res.send(JSON.stringify(resBody));
+  });
 
 router.get('/getAllVoucherWithPopulate/', validation, async (req, res) => {
     let resBody = {
