@@ -173,6 +173,42 @@ router.get("/getonecategory/:id", async (req, res, next) => {
   res.send(JSON.stringify(resBody));
 });
 
+// update category 
+router.post("/updatecategory", async(req, res)=>{
+  let resBody = {
+    result: [],
+    msg: "",
+    status: true,
+  };
+
+  try{
+    console.log("DAtA:", req.body)
+    let id = new ObjectId(req.body.id);
+
+    let fielsToUpdate= {};
+    if(req.body.Name){
+      fielsToUpdate.Name= req.body.Name
+    }
+    
+
+    let { data, error } = await db.updateOneData(CategorynModel, {_id: id}, {...fielsToUpdate})
+
+
+    if (error === null) {
+      resBody.status = true;
+      resBody.msg= "Category updated successfully."
+      resBody.result = data.length > 0 ? data : [];
+    } else {
+      resBody.msg = error.message;
+    }
+  }catch(err){
+    console.log("err:", err)
+    resBody.msg = "Something went wrong";
+  }
+  res.send(JSON.stringify(resBody));
+
+})
+
 router.get("/getcategory", async (req, res, next) => {
   let resBody = {
     result: [],
