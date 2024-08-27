@@ -362,15 +362,15 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
               endDate: data[i].endDate,
               shortDescription:data[i].shortDescription,
               longDescription:data[i].longDescription,
-             // _customer: data[i]._customer,
+              _customer: data[i]._customer.map((item) => item._id),
               _redeemedBy: data[i]._redeemedBy,
               deactivate: data[i].deactivate,
               iswelcome: data[i].iswelcome,
               id: data[i].id,
               isUnique:data[i].isUnique,
               activeImage: data[i].activeImage.url,
-            inactiveImage: data[i].inactiveImage.url,
-            redemptionBarcode: data[i].redemptionBarcode.url
+              inactiveImage: data[i].inactiveImage.url,
+              redemptionBarcode: data[i].redemptionBarcode.url
               
             };
   
@@ -378,6 +378,8 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
               _id:data[i]._provider._id,
               logo: data[i]._provider.logo.url,
               providerName: data[i]._provider.providerName,
+              region:data[i]._provider.region,
+              postcode:data[i]._provider.postcode
             };
           //  delete temp_data._provider;
             temp_data._provider = provider_data
