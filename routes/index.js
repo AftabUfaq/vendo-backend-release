@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var ObjectId = require("mongodb").ObjectId;
+
 const CategoryModel = require("../lists/categories");
 const ProviderModel = require("../lists/providers");
 const CustomerModel = require("../lists/customers");
@@ -4607,5 +4608,31 @@ router.get("/reset-like-wishlist", async (req, res, next) => {
   );
   console.log(a, "::::::::::::::::::::::::::");
 });
+
+
+router.get("/clean", async(req, res)=>{
+  try{
+    
+    let products=  await db.getPopulatedData(ProductModel, {}, [{path: "_provider", select: "region"}])
+
+    let nullIdsOfProducts= []
+    let productsWithNullProvider= products.data.filter((i)=> i._provider==null);
+
+    if(productsWithNullProvider.length > 0){
+      productsWithNullProvider.forEach( async(p)=>{
+        try{
+          await db.deleteOne(ProductModel, {_id: p._id})
+        }catch(err){
+          return res.json({msg:err})
+        }
+      })
+    }
+
+    return res.json({msg: "Deleted unnecessary data."})
+  }catch(err){
+    console.error("Error: ", err)
+    return res.json({msg: err})
+  }
+})
 
 module.exports = router;
