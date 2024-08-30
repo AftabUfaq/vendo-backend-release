@@ -354,7 +354,7 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
             "YYYY-MM-DD"
           ).startOf("day");
           const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf("day");
-          if (currentDate.isBetween(startDate, endDate, "day", "[]") || true) {
+          if (currentDate.isBetween(startDate, endDate, "day", "[]")) {
             let temp_data = {
               title: data[i].title,
               quantity: data[i].quantity,
