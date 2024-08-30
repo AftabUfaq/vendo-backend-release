@@ -28,6 +28,9 @@ router.get("/getCards", validation, async (req, res) => {
     ]);
     let mydata = []
     result.data.forEach(element => {
+      const currentTimestamp2 = Date.now();
+      const currentTimestamp  = currentTimestamp2/1000
+      if(currentTimestamp < element.validUntil && element.status == "enabled" ){
       let obj = {}
       obj._id = element._id
       obj.vendorId = element.vendorId._id
@@ -41,6 +44,8 @@ router.get("/getCards", validation, async (req, res) => {
       obj.qrCodes = element.qrCodes
       obj.validUntil = element.validUntil ? element.validUntil : null
       mydata.push(obj)
+
+      }
 
     });
     resBody.status = true;

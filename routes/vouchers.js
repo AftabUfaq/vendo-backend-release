@@ -349,12 +349,9 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
       if (error === null) {
         for (var i = 0; i < data.length; i++) {
           const currentDate = moment().startOf("day");
-          const startDate = moment(
-            data[i].startDate ?? currentDate,
-            "YYYY-MM-DD"
-          ).startOf("day");
+          const startDate = moment(data[i].startDate ?? currentDate,"YYYY-MM-DD").startOf("day");
           const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf("day");
-          if (currentDate.isBetween(startDate, endDate, "day", "[]")) {
+          if (currentDate.isBetween(startDate, endDate, "day", "[]") && !data[i].deactivate ) {
             let temp_data = {
               title: data[i].title,
               quantity: data[i].quantity,
@@ -367,6 +364,7 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
               deactivate: data[i].deactivate,
               iswelcome: data[i].iswelcome,
               id: data[i].id,
+              deactivate:!data[i].deactivate,
               isUnique:data[i].isUnique,
               activeImage: data[i].activeImage.url,
               inactiveImage: data[i].inactiveImage.url,
