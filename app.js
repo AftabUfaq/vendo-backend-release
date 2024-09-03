@@ -4,6 +4,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
 var createInitialUser = require("./initial-admin");
+const cron = require('node-cron');
 
 createInitialUser();
 
@@ -20,6 +21,9 @@ const vouchers = require("./routes/vouchers");
 const products = require("./routes/products");
 const loyaltyCards = require("./routes/loyaltycards");
 const loyaltyCardsMobile = require("./routes/loyaltycards.mobile");
+
+
+const cleanCron = require("./cronJob");
 
 var app = express();
 
@@ -49,25 +53,10 @@ app.use("/files", express.static(process.env.FILE_PATH));
 
 
 
-// (async function () {
-//   console.log("Sending notification...");
-//   let message= {
-//       "topic": "new_product",
-//       "notification": {
-//         "title": "Breaking Newszz",
-//         "body": "New news story available."
-//       }
-//     }
-  
-  
-//   try {
-//     const response = await admin.messaging().send(message);
-//     console.log(`Notification sent successfully: ${response}`);
-//   } catch (error) {
-//     console.log(`Error sending notification: ${error}`);
-//   }
-  
-// })();
+cron.schedule('* * * * * *', () => {
+  cleanCron();
+});
+
 
 app.use("/", indexRouter);
 app.use("/test", indexTest);
