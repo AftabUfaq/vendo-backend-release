@@ -37,7 +37,6 @@ module.exports = {
 
       // Check if profiles is an array
       if (Array.isArray(profiles) && profiles.length > 0) {
-        console.log("populating", profiles);
         profiles.forEach((profile) => {
           query = query.populate({
             path: profile.path,

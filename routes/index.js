@@ -2,12 +2,14 @@ var express = require("express");
 var router = express.Router();
 var ObjectId = require("mongodb").ObjectId;
 
+
 const CategoryModel = require("../lists/categories");
 const ProviderModel = require("../lists/providers");
 const CustomerModel = require("../lists/customers");
 const TransactionModel = require("../lists/transactions");
 const CategorynModel = require("../lists/category");
 const NotificationModel = require("../lists/notification");
+const VoucherModel = require('../lists/vouchers')
 const ProductModel = require("../lists/products");
 const ProviderLike = require("../lists/provider_like");
 const ProviderWishlist = require("../lists/provider_wishlist");
@@ -4609,30 +4611,5 @@ router.get("/reset-like-wishlist", async (req, res, next) => {
   console.log(a, "::::::::::::::::::::::::::");
 });
 
-
-router.get("/clean", async(req, res)=>{
-  try{
-    
-    let products=  await db.getPopulatedData(ProductModel, {}, [{path: "_provider", select: "region"}])
-
-    let nullIdsOfProducts= []
-    let productsWithNullProvider= products.data.filter((i)=> i._provider==null);
-
-    if(productsWithNullProvider.length > 0){
-      productsWithNullProvider.forEach( async(p)=>{
-        try{
-          await db.deleteOne(ProductModel, {_id: p._id})
-        }catch(err){
-          return res.json({msg:err})
-        }
-      })
-    }
-
-    return res.json({msg: "Deleted unnecessary data."})
-  }catch(err){
-    console.error("Error: ", err)
-    return res.json({msg: err})
-  }
-})
 
 module.exports = router;
