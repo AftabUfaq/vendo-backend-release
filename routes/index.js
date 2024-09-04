@@ -98,6 +98,33 @@ router.get("/categories", async (req, res, next) => {
   res.send(JSON.stringify(resBody));
 });
 
+router.delete("/deletecategory/:id", async (req, res, next) => {
+  let resBody = {
+    result: [],
+    msg: "",
+    status: false,
+  };
+
+  try {
+    let { data, error } = await db.deleteOne(CategorynModel, {
+      _id: ObjectId(req.params.id),
+    });
+    if (error === null) {
+      resBody.status = true;
+      resBody.result = data;
+    } else {
+      resBody.msg = error;
+    }
+
+  } catch (e) {
+    // console.log(e)
+    resBody.status= false
+    resBody.msg = "Something went wrong";
+  }
+  res.send(JSON.stringify(resBody));
+
+})
+
 router.get("/getallcategory", async (req, res, next) => {
   let resBody = {
     result: [],

@@ -188,15 +188,20 @@ router.post('/updateVoucher', validation, async (req, res) => {
     })
 });
 
-router.post('/deleteOneVoucher', validation, async (req, res) => {
+router.post('/deleteOneVoucher/:id', validation, async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
         status: false
     }
 
+    if(!req.params.id){
+        resBody.msg = "Please send voucher id";
+        res.json(JSON.stringify(resBody));
+    }
     try {
-        var id = new ObjectId(req.params.id);
+        let voucherId= req.params.id
+        var id = new ObjectId(voucherId);
 
         let { data, error } = await db.deleteOne(VoucherModel, { _id: id })
 
