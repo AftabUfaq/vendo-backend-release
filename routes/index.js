@@ -1230,9 +1230,11 @@ router.get("/getAllTransactions/", validation, async (req, res) => {
       }
     );
 
+    const data2 = data.filter(item => item._products.every(product => product._product !== null));
+
     if (error === null && data.length > 0) {
       resBody.status = true;
-      resBody.result = data;
+      resBody.result = data2;
     } else {
       resBody.msg = "No order found";
     }
