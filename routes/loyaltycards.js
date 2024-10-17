@@ -10,75 +10,131 @@ const LoyaltyCard = require("../lists/loyaltycards");
 const Qrcode = require("../lists/qrCodes");
 const qrLogs = require("../lists/qrLogs");
 const cardLogs = require("../lists/cardLogs");
+const multer = require("multer");
+const size = 2 * 1024 * 1024;
 
 const validation = (req, res, next) => {
   next();
 };
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, process.env.FILE_PATH); // make sure this directory already exists!
+  },
+  filename: (req, file, cb) => {
+    // const newFilename = `${uuidv4()}-${file.originalname}`;
+    const id = new ObjectId();
+    // cb(null, newFilename);
+    cb(null, id.toString() + "_" + file.originalname.replace(/ /g, "_"));
+  },
+});
+
+var upload = multer({
+  storage,
+  limits: {
+    fileSize: size,
+  },
+}).any();
+
 // admin side actions
 router.post("/createCard", validation, async (req, res) => {
-  const { vendorId, maxPoints, status, qrCodes, validUntil, details } =
+  
+  let resBody = {
+    result: [],
+    msg: "",
+    status: false,
+  };
+
+  const { vendorId, maxPoints, status, qrCodes, validUntil, details, image } =
     req.body;
-  try {
-    const providerById = await db.getData(Provider, {
-      _id: ObjectId(vendorId),
-    });
 
-    if (providerById.length === 0) {
-      return res.json({ status: false, msg: "Provider not found." });
-    }
-
-    let createCardFields = {
-      vendorId: ObjectId(vendorId),
-      maxPoints: maxPoints || undefined,
-      status: status || undefined,
-      validUntil: validUntil || undefined,
-      details: details || undefined,
-    };
-
-    const result = await db.insertOneData(LoyaltyCard, createCardFields);
-
-    // insert the qrCode ids to the loyalty card's qrCodes array
-    if (qrCodes && qrCodes.length > 0) {
-      for (let i = 0; i < qrCodes.length; i++) {
-        let qrCodeInsertion = await db.insertOneData(Qrcode, {
-          status: qrCodes[i].status,
-          LoyaltyCard: result.data._id,
-          points: qrCodes[i].points,
-          expiryDate: qrCodes[i].expiryDate,
-        });
-        // push the new QR code id to the loyalty card's qrCodes array
-        result.data.qrCodes.push(qrCodeInsertion.data._id);
+  upload(req, res, async (err) => {
+    try {
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading.
+        console.log("Multer Known Error :", err);
+        resBody.msg = err.message;
+        resBody.status = false;
+        return res.send(JSON.stringify(resBody));
+      } else if (err) {
+        // An unknown error occurred when uploading.
+        console.log("Multer Unknown Error ::", err);
+        resBody.msg = err.message;
+        resBody.status = false;
+        return res.send(JSON.stringify(resBody));
       }
-      await result.data.save(); // save the loyalty card after pushing qrCodes
+
+      let extraBody = {}
+
+            if ((req.files || []).length > 0) {
+                req.files.forEach(i => {
+                    let id = new ObjectId(i.filename.split("_")[0]);
+                    extraBody[i.fieldname] = { ...i, _id: id, url: "/files/" + i.filename }
+                    delete extraBody[i.fieldname].fieldname
+                })
+            }
+
+      const providerById = await db.getData(Provider, {
+        _id: ObjectId(vendorId),
+      });
+
+      if (providerById.length === 0) {
+        return res.json({ status: false, msg: "Provider not found." });
+      }
+
+      let createCardFields = {
+        vendorId: ObjectId(vendorId),
+        maxPoints: maxPoints || undefined,
+        status: status || undefined,
+        validUntil: validUntil || undefined,
+        details: details || undefined,
+        image: image || null,
+      };
+
+      const result = await db.insertOneData(LoyaltyCard, {...createCardFields, ...extraBody});
+
+      // insert the qrCode ids to the loyalty card's qrCodes array
+      if (qrCodes && qrCodes.length > 0) {
+        for (let i = 0; i < qrCodes.length; i++) {
+          let qrCodeInsertion = await db.insertOneData(Qrcode, {
+            status: qrCodes[i].status,
+            LoyaltyCard: result.data._id,
+            points: qrCodes[i].points,
+            expiryDate: qrCodes[i].expiryDate,
+          });
+          // push the new QR code id to the loyalty card's qrCodes array
+          result.data.qrCodes.push(qrCodeInsertion.data._id);
+        }
+        await result.data.save(); // save the loyalty card after pushing qrCodes
+      }
+
+      providerById.data[0].loyaltyCards.push(result.data._id);
+      await providerById.data[0].save(); // save the provider after pushing loyalty card
+
+      let dataForResponse = await db.getPopulatedData(
+        LoyaltyCard,
+        { _id: result.data._id },
+        [
+          { path: "vendorId", select: {} },
+          { path: "qrCodes", select: {} },
+        ]
+      );
+
+      console.log(dataForResponse);
+      return res.json({
+        status: "success",
+        msg: "Loyalty card created successfully",
+        data: dataForResponse.data[0],
+      });
+    } catch (error) {
+      console.log(error);
+      return res.json({ status: false, msg: "Something went wrong: " + error });
     }
-
-    providerById.data[0].loyaltyCards.push(result.data._id);
-    await providerById.data[0].save(); // save the provider after pushing loyalty card
-
-    let dataForResponse = await db.getPopulatedData(
-      LoyaltyCard,
-      { _id: result.data._id },
-      [
-        { path: "vendorId", select: {} },
-        { path: "qrCodes", select: {} },
-      ]
-    );
-
-    console.log(dataForResponse);
-    res.json({
-      status: "success",
-      msg: "Loyalty card created successfully",
-      data: dataForResponse.data[0],
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({ status: false, msg: "Something went wrong: " + error });
-  }
+  });
 });
 
 router.put("/updateCardById", validation, async (req, res) => {
-  const { _id, maxPoints, status,details, qrCodes } = req.body;
+  const { _id, maxPoints, status, details, qrCodes } = req.body;
   try {
     let doesCardExist = await db.getData(LoyaltyCard, {
       _id: ObjectId(_id),
@@ -242,7 +298,7 @@ router.post("/updateQrCode", validation, async (req, res) => {
     console.log(error);
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
-})
+});
 
 // functions for the following route\
 // check if user has reached the daily limit
@@ -325,7 +381,7 @@ router.post("/claimQrCode", async (req, res) => {
     let doesUserExist = await db.getData(Customer, {
       _id: ObjectId(userId),
     });
-    console.log(doesUserExist)
+    console.log(doesUserExist);
     if (doesUserExist.data.length === 0) {
       return res.json({
         status: false,
@@ -439,7 +495,7 @@ router.post("/claimQrCode", async (req, res) => {
             // card can be  completed
             console.log("======> User can complete card");
             existingPointsInCard.data[0].status = "complete";
-            existingPointsInCard.data[0].points= maxPoints;
+            existingPointsInCard.data[0].points = maxPoints;
             existingPointsInCard.data[0].save();
             // insert qr logs
             await db.insertOneData(qrLogs, {
@@ -592,7 +648,6 @@ router.get("/getCardsForUser/:id", async (req, res) => {
         },
       ]
     );
-   
 
     res.json({ status: true, result: { redeemedCards, activeCards } });
   } catch (error) {
@@ -631,63 +686,62 @@ router.get("/redeemCardById/:id", async (req, res) => {
 router.post("/cardSubscribedByUser", async (req, res) => {
   const { cardId, userId } = req.body;
   try {
-    let hasLoyaltyCardIncomplete= await db.getData(cardLogs, {
+    let hasLoyaltyCardIncomplete = await db.getData(cardLogs, {
       userId: ObjectId(userId),
       status: "incomplete",
       cardId: ObjectId(cardId),
-    })
+    });
 
-    let cardDetails= await db.getData(LoyaltyCard, {
+    let cardDetails = await db.getData(LoyaltyCard, {
       _id: ObjectId(cardId),
-    })
+    });
 
-    let vendorId= cardDetails.data[0].vendorId;
+    let vendorId = cardDetails.data[0].vendorId;
 
-    let vendorDetails= await db.getData(Provider, {
+    let vendorDetails = await db.getData(Provider, {
       _id: ObjectId(vendorId),
-    })
+    });
 
-    if(hasLoyaltyCardIncomplete.data.length > 0){
-      
-      return res.json({ hasCard: true, 
-          details: 
-            {
-              cardId: cardId,
-              vendorId: vendorId, 
-              address: vendorDetails.data[0].address,
-              region: vendorDetails.data[0].region,
-              logo: vendorDetails.data[0].logo,
-              providerName: vendorDetails.data[0].providerName,
-              maxPoints: cardDetails.data[0].maxPoints,
-              status: cardDetails.data[0].status,
-              validUntil: cardDetails.data[0].validUntil,
-              details: cardDetails.data[0].details,
-              createdAt: cardDetails.data[0].createdAt,
-              points: hasLoyaltyCardIncomplete.data[0].points
-            } 
-          });
+    if (hasLoyaltyCardIncomplete.data.length > 0) {
+      return res.json({
+        hasCard: true,
+        details: {
+          cardId: cardId,
+          vendorId: vendorId,
+          address: vendorDetails.data[0].address,
+          region: vendorDetails.data[0].region,
+          logo: vendorDetails.data[0].logo,
+          providerName: vendorDetails.data[0].providerName,
+          maxPoints: cardDetails.data[0].maxPoints,
+          status: cardDetails.data[0].status,
+          validUntil: cardDetails.data[0].validUntil,
+          details: cardDetails.data[0].details,
+          createdAt: cardDetails.data[0].createdAt,
+          points: hasLoyaltyCardIncomplete.data[0].points,
+        },
+      });
     }
 
-    
-    return res.json({ hasCard: false, details: {
-      cardId: cardId,
-      vendorId: vendorId, 
-      address: vendorDetails.data[0].address,
-      region: vendorDetails.data[0].region,
-      logo: vendorDetails.data[0].logo,
-      providerName: vendorDetails.data[0].providerName,
-      maxPoints: cardDetails.data[0].maxPoints,
-      status: cardDetails.data[0].status,
-      validUntil: cardDetails.data[0].validUntil,
-      details: cardDetails.data[0].details,
-      createdAt: cardDetails.data[0].createdAt
-    } });
+    return res.json({
+      hasCard: false,
+      details: {
+        cardId: cardId,
+        vendorId: vendorId,
+        address: vendorDetails.data[0].address,
+        region: vendorDetails.data[0].region,
+        logo: vendorDetails.data[0].logo,
+        providerName: vendorDetails.data[0].providerName,
+        maxPoints: cardDetails.data[0].maxPoints,
+        status: cardDetails.data[0].status,
+        validUntil: cardDetails.data[0].validUntil,
+        details: cardDetails.data[0].details,
+        createdAt: cardDetails.data[0].createdAt,
+      },
+    });
   } catch (error) {
     console.log(error);
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
-
-  
 });
 
 // card remeption reports for a provider
@@ -698,17 +752,34 @@ router.post("/getCardRedemptionReports", async (req, res) => {
 
   // Validate month number
   if (month < 1 || month > 12) {
-    return res.json({ status: false, msg: "Invalid month number. Please provide a value between 1 and 12.", data: [] });
+    return res.json({
+      status: false,
+      msg: "Invalid month number. Please provide a value between 1 and 12.",
+      data: [],
+    });
   }
 
   if (!id) {
-    return res.json({ status: false, msg: "Invalid user id. Please provide a valid user id.", data: [] });
+    return res.json({
+      status: false,
+      msg: "Invalid user id. Please provide a valid user id.",
+      data: [],
+    });
   }
 
   // Define the start and end of the month for the current year as timestamps in milliseconds
-  const startDate = Math.floor(moment().month(month - 1).startOf('month').valueOf() / 1000);
-  const endDate = Math.floor(moment().month(month - 1).endOf('month').valueOf() / 1000);
-
+  const startDate = Math.floor(
+    moment()
+      .month(month - 1)
+      .startOf("month")
+      .valueOf() / 1000
+  );
+  const endDate = Math.floor(
+    moment()
+      .month(month - 1)
+      .endOf("month")
+      .valueOf() / 1000
+  );
 
   try {
     let result = await db.getPopulatedData(
@@ -727,22 +798,23 @@ router.post("/getCardRedemptionReports", async (req, res) => {
       ]
     );
 
-    
     // timestampToCheck >= startTimestamp && timestampToCheck <= endTimestamp;
-    result= result.data.filter(item => item.RedemptionDate > startDate && item.RedemptionDate < endDate);
+    result = result.data.filter(
+      (item) => item.RedemptionDate > startDate && item.RedemptionDate < endDate
+    );
 
-    if (result.length  < 1) {
-      return res.json({ status: false, data: [],startDate,endDate, });
+    if (result.length < 1) {
+      return res.json({ status: false, data: [], startDate, endDate });
     }
 
-
-
     // Create array of objects
-    let dataForResponse = result.map(item => ({
+    let dataForResponse = result.map((item) => ({
       BonusCardId: item.cardId._id,
       ProviderId: id,
       CardDescription: item.cardId.details,
-      RedemptionDate: moment.unix(item.RedemptionDate).format('DD/MM/YYYY hh:mm A')
+      RedemptionDate: moment
+        .unix(item.RedemptionDate)
+        .format("DD/MM/YYYY hh:mm A"),
     }));
 
     console.log("dataForResponse", dataForResponse);
@@ -752,7 +824,5 @@ router.post("/getCardRedemptionReports", async (req, res) => {
     res.json({ status: false, msg: "Something went wrong: " + error });
   }
 });
-
-
 
 module.exports = router;
