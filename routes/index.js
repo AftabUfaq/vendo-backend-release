@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var ObjectId = require("mongodb").ObjectId;
 
+const FileUploadService = require("../services/s3-service");
 
 const CategoryModel = require("../lists/categories");
 const ProviderModel = require("../lists/providers");
@@ -22,6 +23,12 @@ var admin = require("firebase-admin");
 var serviceAccount = require("./vendo-5a7dd-firebase-adminsdk-fdopp-dd6fdf5895.json");
 
 const { sendMail } = require("../system/mail");
+
+const multer = require("multer");
+
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage: storage });
 
 // const arrayFields = require('../lists/arrayFields')
 // const { Curl } = require('node-libcurl');
@@ -63,6 +70,25 @@ const validation = (req, res, next) => {
   //   );
   // }
 };
+
+
+router.post("/uploadFile", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const fileUploadService = new FileUploadService();
+    
+
+    const fileUrl = await fileUploadService.uploadFile(req.file);
+    res.json({ message: "File uploaded successfully", url: fileUrl });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).json({ error: "Failed to upload file" });
+  }
+})
+
 
 router.get("/categories", async (req, res, next) => {
   let resBody = {
