@@ -134,7 +134,7 @@ router.post("/createCard", validation, async (req, res) => {
 });
 
 router.put("/updateCardById", validation, async (req, res) => {
-  const { _id, maxPoints, status, details, qrCodes } = req.body;
+  const { _id, maxPoints, status, details, qrCodes, image } = req.body;
   try {
     let doesCardExist = await db.getData(LoyaltyCard, {
       _id: ObjectId(_id),
@@ -150,6 +150,7 @@ router.put("/updateCardById", validation, async (req, res) => {
     if (maxPoints) cardUpateFields.maxPoints = maxPoints;
     if (status) cardUpateFields.status = status;
     if (details) cardUpateFields.details = details;
+    if (image) cardUpateFields.image= image;
     const result = await db.updateOneData(
       LoyaltyCard,
       {
