@@ -217,16 +217,22 @@ router.get("/getCardById/:id", async (req, res) => {
   };
   const { id } = req.params;
   try {
+
+    var hostname = req.headers.host
+
+
     let doesCardExist = await db.getData(LoyaltyCard, {
       _id: ObjectId(id),
     });
-    console.log(doesCardExist);
+
+    
     if (doesCardExist.data.length === 0) {
       return res.json({
         status: false,
         msg: "Loyalty card not found.",
       });
     }
+    
     const result = await db.getPopulatedData(
       LoyaltyCard,
       {
@@ -237,6 +243,11 @@ router.get("/getCardById/:id", async (req, res) => {
         { path: "qrCodes", select: {} },
       ]
     );
+    
+    if(!result.data[0].image){
+      result.image= 'https://' + hostname + result.data[0].vendorId.logo.url
+    }
+
     resBody.status = true;
     resBody.result = result;
     res.json(resBody);
