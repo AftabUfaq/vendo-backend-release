@@ -1002,8 +1002,17 @@ router.get('/prfeed/:user_id', async (req, res, next) => {
     res.send({ success: false, message: "User id mandatory" });
     //return false;
   }
+  let branches= [];
+
+  let providerWhere= {};
+  
+  if(req.query.branch){
+    branches= Array.isArray(req.query.branch) ? req.query.branch : ["Gastro", "Blog", "Shopping", "Fit & Beauty", "Event", "B2B"];
+    providerWhere.branch = { $in: branches };
+  }
+
   // var provider_details = await ProviderModel.find({ "feed_show_status":true }).exec();
-  var provider_details = await ProviderModel.find({}).exec();
+  var provider_details = await ProviderModel.find({ ...providerWhere }).exec();
   if (provider_details.length > 0) {
     var hostname = req.headers.host
     var results = [];
