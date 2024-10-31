@@ -13,6 +13,7 @@ const admin = require("firebase-admin");
 var indexRouter = require("./routes/index");
 var indexTest = require("./routes/index_test");
 const users = require("./routes/users");
+const storyRoutes= require("./routes/Story");
 const adminUsers = require("./routes/adminusers");
 const staticContents = require("./routes/staticContent");
 const providers = require("./routes/providers");
@@ -66,6 +67,7 @@ app.use("/admin", adminUsers);
 app.use("/vouchers", vouchers);
 app.use("/products", products);
 app.use("/cards", loyaltyCards);
+app.use("/api/stories", storyRoutes);
 app.use('/providers_test',providers_test)
 app.use("/cards_mobile",loyaltyCardsMobile)
 app.use("/staticcontents", staticContents);
