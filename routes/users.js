@@ -189,7 +189,7 @@ router.post('/login', async (req, res) => {
                 resBody.status = true
                 resBody.result = {
                     user: data[0],
-                    token: tokenlogin
+                    token: token
                 }
 
             } else {
