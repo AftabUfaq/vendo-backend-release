@@ -6,6 +6,9 @@ var jwt = require("jsonwebtoken");
 var fs = require("fs");
 var path = require("path");
 
+const { body, validationResult } = require("express-validator");
+
+
 const ProviderModel = require("../lists/providers");
 const PrefeedModel = require("../lists/prfeed");
 const Setting = require("../lists/setting");
@@ -17,6 +20,8 @@ const ProviderWishlistRoot = require("../lists/root_provider_wishlist");
 const { sendMail } = require("../system/mail");
 
 const multer = require("multer");
+
+const JWT_SECRET = "67TYGHRE99UISFD890U43JHRWERTYDGH";
 
 var size = 36 * 1024 * 1024;
 const storage = multer.diskStorage({
@@ -113,6 +118,342 @@ const uploadImage = async (base64image, fieldname) => {
     return [e, null];
   }
 };
+
+router.post(
+  "/signup",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email."),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
+  ],
+  async (req, res) => {
+    let resBody = {
+      result: null,
+      msg: "",
+      status: false,
+    };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      resBody.msg = errors.array().map((err) => err.msg).join(", ");
+      return res.status(400).json(resBody);
+    }
+
+    try {
+      const { email, password, ...optionalFields } = req.body;
+
+      // Check if provider already exists with the given email
+      const existingProvider = await ProviderModel.findOne({ email });
+      if (existingProvider) {
+        resBody.msg = "This email is already registered with another provider.";
+        return res.status(400).json(resBody);
+      }
+
+      // Generate OTP for email verification
+      const otp = crypto.randomInt(1111, 9999);
+
+      // Hash the password before storing it
+      const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
+
+      const newProvider = new ProviderModel({
+        email,
+        password: hashedPassword,
+        emailVerified: false,
+        otp, // Store the OTP for verification purposes
+        ...optionalFields,
+        update_time: new Date().toISOString(),
+      });
+
+      // Save the provider to the database
+      const data = await newProvider.save();
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          data: { id: data._id, email: data.email },
+        },
+        JWT_SECRET,
+        { expiresIn: "180d" }
+      );
+
+      // Send OTP email
+      const mailDetails = {
+        from: 'vendomrtn@gmail.com',
+        to: email,
+        subject: 'Email Verification OTP',
+        html: `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body>
+                <p>Dear user,</p>
+                <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+                <p>Please enter this code in the application to complete your registration.</p>
+                <p>Thank you!</p>
+            </body>
+            </html>`
+      };
+
+      sendMail(mailDetails)
+        .then(() => {
+          // OTP email sent successfully
+          resBody.status = true;
+          resBody.result = { provider: data, token };
+          resBody.msg = "Signup successful, OTP has been sent to your email.";
+          res.json(resBody);
+        })
+        .catch((err) => {
+          console.error("Error sending email:", err);
+          resBody.msg = "Signup successful, but failed to send OTP email. Please try again.";
+          res.json(resBody);
+        });
+
+    } catch (error) {
+      console.error("Error:", error);
+      resBody.msg = "Something went wrong. Please try again.";
+      res.json(resBody);
+    }
+  }
+);
+
+router.post(
+  "/login",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email."),
+    body("password").exists().withMessage("Password is required."),
+  ],
+  async (req, res) => {
+    let resBody = {
+      result: null,
+      msg: "",
+      status: false,
+    };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      resBody.msg = errors.array().map((err) => err.msg).join(", ");
+      return res.status(400).json(resBody);
+    }
+
+    try {
+      const { email, password } = req.body;
+
+      // Find the provider by email
+      const provider = await ProviderModel.findOne({ email });
+      if (!provider) {
+        resBody.msg = "Invalid credentials.";
+        return res.status(401).json(resBody);
+      }
+
+      // Verify password
+      const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
+      if (provider.password !== hashedPassword) {
+        resBody.msg = "Invalid credentials.";
+        return res.status(401).json(resBody);
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          data: { id: provider._id, email: provider.email },
+        },
+        JWT_SECRET,
+        { expiresIn: "180d" }
+      );
+
+      resBody.status = true;
+      resBody.result = { provider, token };
+      res.json(resBody);
+    } catch (error) {
+      console.error("Error:", error);
+      resBody.msg = "Something went wrong. Please try again.";
+      res.json(resBody);
+    }
+  }
+);
+
+router.post(
+  "/resetPassword",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email."),
+  ],
+  async (req, res) => {
+    let resBody = {
+      result: null,
+      msg: "",
+      status: false,
+    };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      resBody.msg = errors.array().map((err) => err.msg).join(", ");
+      return res.status(400).json(resBody);
+    }
+
+    try {
+      const { email } = req.body;
+
+      // Check if provider exists
+      const existingProvider = await ProviderModel.findOne({ email });
+      if (!existingProvider) {
+        resBody.msg = "No provider found with this email.";
+        return res.status(404).json(resBody);
+      }
+
+      // Generate new OTP
+      const otp = crypto.randomInt(1111, 9999);
+      existingProvider.otp = otp; // Update OTP in the database
+
+      // Save updated provider
+      await existingProvider.save();
+
+      // Send OTP email
+      const mailDetails = {
+        from: 'vendomrtn@gmail.com',
+        to: email,
+        subject: 'Password Reset OTP',
+        html: `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body>
+                <p>Dear user,</p>
+                <p>Your OTP for password reset is: <strong>${otp}</strong></p>
+                <p>Please enter this code in the application to reset your password.</p>
+                <p>Thank you!</p>
+            </body>
+            </html>`
+      };
+
+      await sendMail(mailDetails);
+      resBody.status = true;
+      resBody.msg = "OTP has been sent to your email.";
+      res.json(resBody);
+    } catch (error) {
+      console.error("Error:", error);
+      resBody.msg = "Something went wrong. Please try again.";
+      res.json(resBody);
+    }
+  }
+);
+
+router.post(
+  "/verifyOtp",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email."),
+    body("otp").exists().withMessage("OTP is required."),
+  ],
+  async (req, res) => {
+    let resBody = {
+      result: null,
+      msg: "",
+      status: false,
+    };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      resBody.msg = errors.array().map((err) => err.msg).join(", ");
+      return res.status(400).json(resBody);
+    }
+
+    try {
+      const { email, otp } = req.body;
+
+      // Find the provider by email
+      const provider = await ProviderModel.findOne({ email });
+      if (!provider) {
+        resBody.msg = "No provider found with this email.";
+        return res.status(404).json(resBody);
+      }
+
+      // Check if the provided OTP matches the one in the database
+      if (provider.otp !== otp) {
+        resBody.msg = "Invalid OTP.";
+        return res.status(400).json(resBody);
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          data: { id: provider._id, email: provider.email },
+        },
+        JWT_SECRET,
+        { expiresIn: "180d" }
+      );
+
+      resBody.status = true;
+      resBody.result = { provider, token };
+      res.json(resBody);
+    } catch (error) {
+      console.error("Error:", error);
+      resBody.msg = "Something went wrong. Please try again.";
+      res.json(resBody);
+    }
+  }
+);
+
+
+
+router.post(
+  "/login",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email."),
+    body("password").notEmpty().withMessage("Password is required."),
+  ],
+  async (req, res) => {
+    let resBody = {
+      result: null,
+      msg: "",
+      status: false,
+    };
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      resBody.msg = errors.array().map((err) => err.msg).join(", ");
+      return res.status(400).json(resBody);
+    }
+
+    try {
+      const { email, password } = req.body;
+
+      // Find provider by email
+      const provider = await Provider.findOne({ email });
+      if (!provider) {
+        resBody.msg = "Invalid email or password.";
+        return res.status(401).json(resBody);
+      }
+
+      // Hash the password and compare it with the stored hash
+      const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
+      if (provider.password !== hashedPassword) {
+        resBody.msg = "Invalid email or password.";
+        return res.status(401).json(resBody);
+      }
+
+      // Generate JWT token if login is successful
+      const token = jwt.sign(
+        {
+          data: { id: provider._id, email: provider.email },
+        },
+        JWT_SECRET,
+        { expiresIn: "180d" } // 180 days expiration
+      );
+
+      // Respond with status, provider data, and token
+      resBody.status = true;
+      resBody.result = { provider, token };
+      resBody.msg = "Login successful!";
+    } catch (error) {
+      console.log("Error:", error);
+      resBody.msg = "Something went wrong. Please try again.";
+    }
+
+    res.json(resBody);
+  }
+);
 
 router.post("/add_user/", validation, (req, res) => {
   let resBody = {

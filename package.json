@@ -15,6 +15,7 @@
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
     "express": "~4.16.1",
+    "express-validator": "^7.2.0",
     "fcm-node": "^1.6.1",
     "firebase-admin": "^11.0.0",
     "graphql": "^16.3.0",
