@@ -90,6 +90,10 @@ router.post("/uploadFile", upload.single("file"), async (req, res) => {
 })
 
 
+router.get("/", (req,res)=>{
+  return res.json({msg: "OKAY"})
+})
+
 router.get("/categories", async (req, res, next) => {
   let resBody = {
     result: [],
