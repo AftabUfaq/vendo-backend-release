@@ -403,6 +403,84 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
     res.send(JSON.stringify(resBody));
   });
 
+  router.get("/getVouchersByCustomerId", validation, async (req, res) => {
+    let resBody = {
+        result: [],
+        msg: "",
+        status: false,
+    };
+
+    try {
+        const customerId = req.query.customerId;
+        if (!customerId) {
+            resBody.msg = "Customer ID is required";
+            return res.status(400).send(JSON.stringify(resBody));
+        }
+
+        const query = { _customer: customerId };
+
+        let { data, error } = await db.getPopulatedData(
+            VoucherModel,
+            query,
+            "_provider _customer"
+        );
+
+        let data1 = [];
+        let j = 0;
+
+        if (error === null) {
+            for (let i = 0; i < data.length; i++) {
+                const currentDate = moment().startOf("day");
+                const startDate = moment(data[i].startDate ?? currentDate, "YYYY-MM-DD").startOf("day");
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf("day");
+
+                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !data[i].deactivate) {
+                    let temp_data = {
+                        title: data[i].title,
+                        quantity: data[i].quantity,
+                        voucherTaken: data[i].voucherTaken,
+                        endDate: data[i].endDate,
+                        shortDescription: data[i].shortDescription,
+                        longDescription: data[i].longDescription,
+                        _customer: data[i]._customer.map((item) => item._id),
+                        _redeemedBy: data[i]._redeemedBy,
+                        deactivate: !data[i].deactivate,
+                        iswelcome: data[i].iswelcome,
+                        id: data[i].id,
+                        isUnique: data[i].isUnique,
+                        activeImage: data[i].activeImage?.url,
+                        inactiveImage: data[i].inactiveImage?.url,
+                        redemptionBarcode: data[i].redemptionBarcode?.url,
+                    };
+
+                    let provider_data = {
+                        _id: data[i]._provider._id,
+                        logo: data[i]._provider.logo?.url,
+                        providerName: data[i]._provider.providerName,
+                        region: data[i]._provider.region,
+                        postcode: data[i]._provider.postcode,
+                    };
+
+                    temp_data._provider = provider_data;
+                    data1[j] = temp_data;
+                    j++;
+                }
+            }
+
+            resBody.status = true;
+            resBody.result = data1;
+        } else {
+            resBody.msg = error.message;
+        }
+    } catch (e) {
+        console.error(e);
+        resBody.msg = "Something went wrong";
+    }
+
+    res.send(JSON.stringify(resBody));
+});
+
+
 router.get('/getAllVoucherWithPopulate/', validation, async (req, res) => {
     let resBody = {
         result: [],
