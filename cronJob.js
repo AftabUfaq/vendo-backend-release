@@ -13,7 +13,7 @@ const cleanCron= async () => {
         try{
         //   await db.deleteOne(ProductModel, {_id: p._id})
 
-          console.log(`Empty Products count: ${productsWithNullProvider.length}`)
+          //console.log(`Empty Products count: ${productsWithNullProvider.length}`)
         }catch(err){
             console.log("Error deleting products: ", err)
         }
