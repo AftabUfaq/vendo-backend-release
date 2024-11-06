@@ -585,7 +585,7 @@ router.post('/uploadProfile', uploadFile.single('image'), (req, res) => {
     try {
         // Construct the image URL
         const hostname = req.headers.host;
-        const imageUrl = `https://${hostname}${path.join('/storage', req.file.filename)}`;
+        const imageUrl = `https://${hostname}/files/${req.file.filename}`;
 
         // Send response with the image URL
         res.status(200).json({
