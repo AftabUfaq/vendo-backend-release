@@ -3,6 +3,7 @@ var router = express.Router();
 var ObjectId = require('mongodb').ObjectId
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
+const path = require('path');
 
 const CustomerModel = require('../lists/customers')
 const OtpModel = require('../lists/otp')
@@ -593,6 +594,7 @@ router.post('/uploadProfile', uploadFile.single('image'), (req, res) => {
             url: imageUrl
         });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ success: false, message: "Upload failed", error });
     }
 });
