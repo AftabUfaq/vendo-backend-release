@@ -32,6 +32,11 @@ var upload = multer({
     }
 }).any();
 
+const uploadFile = multer({ 
+    storage: storage,
+    limits: { fileSize: size }
+});
+
 const validation = (req, res, next) => {
     let token = req.headers["x-request-token"] || null
     try {
@@ -575,7 +580,7 @@ router.get('/getAllUsers/', async (req, res) => {
     res.send(JSON.stringify(resBody))
 });
 
-router.post('/uploadProfile', upload.single('image'), (req, res) => {
+router.post('/uploadProfile', uploadFile.single('image'), (req, res) => {
     try {
         // Construct the image URL
         const hostname = req.headers.host;
