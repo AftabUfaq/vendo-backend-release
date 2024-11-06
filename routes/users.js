@@ -575,4 +575,21 @@ router.get('/getAllUsers/', async (req, res) => {
     res.send(JSON.stringify(resBody))
 });
 
+app.post('/uploadProfile', upload.single('image'), (req, res) => {
+    try {
+        // Construct the image URL
+        const hostname = req.headers.host;
+        const imageUrl = `https://${hostname}${path.join('/storage', req.file.filename)}`;
+
+        // Send response with the image URL
+        res.status(200).json({
+            success: true,
+            message: "Image uploaded successfully",
+            url: imageUrl
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Upload failed", error });
+    }
+});
+
 module.exports = router;
