@@ -575,7 +575,7 @@ router.get('/getAllUsers/', async (req, res) => {
     res.send(JSON.stringify(resBody))
 });
 
-app.post('/uploadProfile', upload.single('image'), (req, res) => {
+router.post('/uploadProfile', upload.single('image'), (req, res) => {
     try {
         // Construct the image URL
         const hostname = req.headers.host;
