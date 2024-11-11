@@ -17,6 +17,7 @@ const storyRoutes= require("./routes/Story");
 const adminUsers = require("./routes/adminusers");
 const staticContents = require("./routes/staticContent");
 const providers = require("./routes/providers");
+const howItWorks= require('./routes/howItworks')
 const providers_test = require("./routes/providers_test");
 const vouchers = require("./routes/vouchers");
 const products = require("./routes/products");
@@ -66,6 +67,7 @@ app.use("/providers", providers);
 app.use("/admin", adminUsers);
 app.use("/vouchers", vouchers);
 app.use("/products", products);
+app.use("/hiw", howItWorks);
 app.use("/cards", loyaltyCards);
 app.use("/api/stories", storyRoutes);
 app.use('/providers_test',providers_test)
