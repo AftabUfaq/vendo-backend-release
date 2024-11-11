@@ -19,17 +19,16 @@ var fs = require('fs');
 var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
-if(process.env.NODE_ENV == 'PROD'){
   
   var privateKey  = fs.readFileSync(path.join(__dirname, 'mein-vendoapp_de.pem'), 'utf8');
   var certificate = fs.readFileSync(path.join(__dirname, 'mein-vendoapp_de.csr'), 'utf8');
   var credentials = {key: privateKey, cert: certificate};
   
   var server = https.createServer(credentials, app);
-}else{
 
-  var server = http.createServer(app);
-}
+
+  // var server = http.createServer(app);
+
 /**
  * Create HTTP server.
  */
