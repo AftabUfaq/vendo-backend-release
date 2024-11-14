@@ -1214,7 +1214,7 @@ router.get("/getVouchersByCustomerId", validation, async (req, res) => {
                 const currentDate = moment().startOf("day");
                 const startDate = moment(my_item.startDate ?? currentDate,"YYYY-MM-DD").startOf("day");
                 const endDate = moment(my_item.endDate, "YYYY-MM-DD").endOf("day");
-                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !my_item.deactivate && item2.status == "voucher" ) {
+                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !my_item.deactivate && item2.status == "voucher" && my_item._customer.includes(`${req.query.customerId}`) ) {
                     my_data.push({...item2,_voucher})
                 }else if( item2.status == "redeemed"){
                     my_data.push({...item2,_voucher})
