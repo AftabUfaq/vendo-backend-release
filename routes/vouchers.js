@@ -1216,9 +1216,23 @@ router.get('/getAllVoucherTransactions/', validation, async (req, res) => {
             status: 1,
         });
 
+
+
         if (error === null && data.length > 0) {
+            const sortedData = data.sort((a, b) => b.timestamp - a.timestamp);
+            
+            sortedData.map((item)=>{
+                const dateObj = new Date(Number(item.redeemedTimestamp)); // Parse timestamp
+                const day = String(dateObj.getDate()).padStart(2, '0'); // Day with leading zero
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Month with leading zero
+                const year = dateObj.getFullYear(); // Year
+
+                item.redeemedTimestamp = `${day}-${month}-${year}`; // Format as DD-MM-YYYY
+                console.log(item.redeemedTimestamp);
+            })
+
             resBody.status = true
-            resBody.result = data
+            resBody.result = sortedData
         } else {
             resBody.msg = "No redeemed voucher transaction found"
         }
