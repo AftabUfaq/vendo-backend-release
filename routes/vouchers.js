@@ -1103,10 +1103,13 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
         msg: "",
         status: false,
     };
+    let query = {}
 
     try {
-        const query = { _customer: new ObjectId(req.query.cid) };
-
+        if (req?.query?.cid && ObjectId.isValid(req.query.cid)) {
+            query = { _customer: new ObjectId(req.query.cid) };
+        }
+               
         let { data, error } = await db.getPopulatedData(VoucherTransactionModel, query, "_voucher", {
             _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _providerId: "$_provider"
         }, {
@@ -1157,9 +1160,9 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
             resBody.msg = error.message;
         }
     } catch (e) {
-        console.log(e);
-        resBody.msg = JSON.stringify(e);
-    }
+    //     console.log(e);
+         resBody.msg =  JSON.stringify(query) //JSON.stringify(e);
+     }
 
     res.send(JSON.stringify(resBody));
 });
