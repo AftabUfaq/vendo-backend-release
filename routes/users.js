@@ -3,6 +3,7 @@ var router = express.Router();
 var ObjectId = require('mongodb').ObjectId
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
+const path = require('path');
 
 const CustomerModel = require('../lists/customers')
 const OtpModel = require('../lists/otp')
@@ -31,6 +32,11 @@ var upload = multer({
         fileSize: size
     }
 }).any();
+
+const uploadFile = multer({ 
+    storage: storage,
+    limits: { fileSize: size }
+});
 
 const validation = (req, res, next) => {
     let token = req.headers["x-request-token"] || null
@@ -189,7 +195,7 @@ router.post('/login', async (req, res) => {
                 resBody.status = true
                 resBody.result = {
                     user: data[0],
-                    token: tokenlogin
+                    token: token
                 }
 
             } else {
@@ -573,6 +579,24 @@ router.get('/getAllUsers/', async (req, res) => {
     }
 
     res.send(JSON.stringify(resBody))
+});
+
+router.post('/uploadProfile', uploadFile.single('image'), (req, res) => {
+    try {
+        // Construct the image URL
+        const hostname = req.headers.host;
+        const imageUrl = `https://${hostname}/files/${req.file.filename}`;
+
+        // Send response with the image URL
+        res.status(200).json({
+            success: true,
+            message: "Image uploaded successfully",
+            url: imageUrl
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Upload failed", error });
+    }
 });
 
 module.exports = router;

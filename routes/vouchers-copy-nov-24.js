@@ -1014,23 +1014,9 @@ router.get('/getAllVoucherTransactions/', validation, async (req, res) => {
             status: 1,
         });
 
-
-
         if (error === null && data.length > 0) {
-            const sortedData = data.sort((a, b) => b.timestamp - a.timestamp);
-            
-            sortedData.map((item)=>{
-                const dateObj = new Date(Number(item.redeemedTimestamp)); // Parse timestamp
-                const day = String(dateObj.getDate()).padStart(2, '0'); // Day with leading zero
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Month with leading zero
-                const year = dateObj.getFullYear(); // Year
-
-                item.redeemedTimestamp = `${day}-${month}-${year}`; // Format as DD-MM-YYYY
-                console.log(item.redeemedTimestamp);
-            })
-
             resBody.status = true
-            resBody.result = sortedData
+            resBody.result = data
         } else {
             resBody.msg = "No redeemed voucher transaction found"
         }
@@ -1111,7 +1097,7 @@ router.get("/getAllVoucherMobile/", validation, async (req, res) => {
     res.send(JSON.stringify(resBody));
   });
 
-router.get('/getCustomerVouchers/', validation, async (req, res) => {
+  router.get('/getCustomerVouchers/', validation, async (req, res) => {
     let resBody = {
         result: [],
         msg: "",
@@ -1129,8 +1115,8 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
 
         if (error === null) {
             let my_data = []
-            for (var i = 0; i < data.length; i++) {
-                let item2 = data[i]._doc
+            data.forEach((item, index) => {
+                let item2 = {...item._doc}
                 let my_item =  item2._voucher
                 let activeImage = my_item.activeImage.url
                 let inactiveImage = my_item.inactiveImage.url
@@ -1158,13 +1144,8 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
                     __v:my_item.__v,
                 }
                 delete item2._voucher
-                const currentDate = moment().startOf("day");
-                const startDate = moment(my_item.startDate ?? currentDate,"YYYY-MM-DD").startOf("day");
-                const endDate = moment(my_item.endDate, "YYYY-MM-DD").endOf("day");
-                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !my_item.deactivate && item2.status == "voucher" ) {
-                    my_data.push({...item2,_voucher})
-                }
-            }
+                my_data.push({...item2,_voucher})
+            })
             resBody.status = true;
             resBody.result = my_data;
         } else {
@@ -1177,6 +1158,7 @@ router.get('/getCustomerVouchers/', validation, async (req, res) => {
 
     res.send(JSON.stringify(resBody));
 });
+
 
 router.get("/getVouchersByCustomerId", validation, async (req, res) => {
     let resBody = {
@@ -1186,66 +1168,73 @@ router.get("/getVouchersByCustomerId", validation, async (req, res) => {
     };
 
     try {
-        const query = { _customer: new ObjectId(req.query.customerId) };
+        const customerId = req.query.customerId;
+        if (!customerId) {
+            resBody.msg = "Customer ID is required";
+            return res.status(400).send(JSON.stringify(resBody));
+        }
 
-        let { data, error } = await db.getPopulatedData(VoucherTransactionModel, query, "_voucher", {
-            _id: 0, id: "$_id", title: 1, deactivate: 1, quantity: 1, startDate: 1, endDate: 1, shortDescription: 1, longDescription: 1, activeImage: "$activeImage.url", inactiveImage: "$inactiveImage.url", redemptionBarcode: "$redemptionBarcode.url", voucherTaken: 1, _redeemedBy: 1, _providerId: "$_provider"
-        }, {
-            _id: 0, id: "$_id", _voucherId: "$_voucher", _customer: 1, timestamp: 1, quantity: 1, status: 1, redeemed: 1, redeemedTimestamp: 1, _providerId: "$_provider"
-        })
+        const query = { _customer: customerId };
+
+        let { data, error } = await db.getPopulatedData(
+            VoucherModel,
+            query,
+            "_provider _customer"
+        );
+
+        let data1 = [];
+        let j = 0;
 
         if (error === null) {
-            let my_data = []
-            for (var i = 0; i < data.length; i++) {
-                let item2 = data[i]._doc
-                let my_item =  item2._voucher
-                let activeImage = my_item.activeImage.url
-                let inactiveImage = my_item.inactiveImage.url
-                let redemptionBarcode = my_item.redemptionBarcode.url
-                let _voucher = {
-                    activeImage,
-                    inactiveImage,
-                    redemptionBarcode,
-                    _id:my_item._id,
-                    id:my_item.id,
-                    title:my_item.title,
-                    quantity:my_item.quantity,
-                    voucherTaken:my_item.voucherTaken,
-                    voucherRedeemed:my_item.voucherRedeemed,
-                    _provider:my_item._provider,
-                    startDate:my_item.startDate,
-                    endDate:my_item.endDate,
-                    shortDescription:my_item.shortDescription,
-                    longDescription:my_item.longDescription,
-                    _customer:my_item._customer,
-                    _redeemedBy:my_item._redeemedBy,
-                    _voucherTransaction:my_item._voucherTransaction,
-                    deactivate:my_item.deactivate,
-                    iswelcome:my_item.iswelcome,
-                    __v:my_item.__v,
-                }
-                delete item2._voucher
+            for (let i = 0; i < data.length; i++) {
                 const currentDate = moment().startOf("day");
-                const startDate = moment(my_item.startDate ?? currentDate,"YYYY-MM-DD").startOf("day");
-                const endDate = moment(my_item.endDate, "YYYY-MM-DD").endOf("day");
-                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !my_item.deactivate && item2.status == "voucher" && my_item._customer.includes(`${req.query.customerId}`) ) {
-                    my_data.push({...item2,_voucher})
-                }else if( item2.status == "redeemed"){
-                    my_data.push({...item2,_voucher})
+                const startDate = moment(data[i].startDate ?? currentDate, "YYYY-MM-DD").startOf("day");
+                const endDate = moment(data[i].endDate, "YYYY-MM-DD").endOf("day");
+
+                if (currentDate.isBetween(startDate, endDate, "day", "[]") && !data[i].deactivate) {
+                    let temp_data = {
+                        title: data[i].title,
+                        quantity: data[i].quantity,
+                        voucherTaken: data[i].voucherTaken,
+                        endDate: data[i].endDate,
+                        shortDescription: data[i].shortDescription,
+                        longDescription: data[i].longDescription,
+                        _customer: data[i]._customer.map((item) => item._id),
+                        _redeemedBy: data[i]._redeemedBy,
+                        deactivate: !data[i].deactivate,
+                        iswelcome: data[i].iswelcome,
+                        id: data[i].id,
+                        isUnique: data[i].isUnique,
+                        activeImage: data[i].activeImage?.url,
+                        inactiveImage: data[i].inactiveImage?.url,
+                        redemptionBarcode: data[i].redemptionBarcode?.url,
+                        
+                    };
+
+                    let provider_data = {
+                        _id: data[i]._provider._id,
+                        logo: data[i]._provider.logo?.url,
+                        providerName: data[i]._provider.providerName,
+                        region: data[i]._provider.region,
+                        postcode: data[i]._provider.postcode,
+                    };
+
+                    temp_data._provider = provider_data;
+                    data1[j] = temp_data;
+                    j++;
                 }
             }
+
             resBody.status = true;
-            resBody.result = my_data;
+            resBody.result = data1;
         } else {
             resBody.msg = error.message;
         }
     } catch (e) {
-        console.log(e);
-        resBody.msg = JSON.stringify(e);
+        console.error(e);
+        resBody.msg = "Something went wrong";
     }
 
     res.send(JSON.stringify(resBody));
 });
-
-
 module.exports = router;

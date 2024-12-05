@@ -28,20 +28,26 @@ router.get("/getCards", validation, async (req, res) => {
     ]);
     let mydata = []
     result.data.forEach(element => {
-      let obj = {}
-      obj._id = element._id
-      obj.vendorId = element.vendorId._id
-      obj.providerName  = element.vendorId.providerName
-      obj.address  = element.vendorId.address
-      obj.region = element.vendorId.region
-      obj.logo = element.vendorId.logo.filename
-      obj.maxPoints  = element.maxPoints
-      obj.status = element.status
-      obj.details  =  element.details
-      obj.qrCodes = element.qrCodes
-      obj.validUntil = element.validUntil ? element.validUntil : null
-      mydata.push(obj)
-
+      let obj = {};
+      obj._id = element._id;
+      obj.vendorId = element.vendorId._id;
+      obj.providerName = element.vendorId.providerName;
+      obj.address = element.vendorId.address;
+      obj.region = element.vendorId.region;
+      obj.logo = element.vendorId.logo.filename;
+      obj.image = element?.image ?? element.vendorId.logo.filename;
+      obj.maxPoints = element.maxPoints;
+      obj.status = element.status;
+      obj.details = element.details;
+      obj.qrCodes = element.qrCodes;
+      obj.validUntil = element.validUntil ? element.validUntil : null;
+    
+      // Check if the status is "enabled" and if validUntil is either null, undefined, or a future date
+      const isValid = !element.validUntil || new Date(element.validUntil * 1000) > new Date();
+      
+      if (element.status === "enabled" && isValid) {
+        mydata.push(obj);
+      }
     });
     resBody.status = true;
     resBody.result = mydata;
@@ -143,7 +149,7 @@ const checkUserDailyLimit = async (userId) => {
         $lte: endOfToday,
       },
     });
-    if (count.data.length >= 5) {
+    if (count.data.length >= 50) {
       return true;
     }
     return false;
@@ -221,7 +227,7 @@ router.post("/claimQrCode", async (req, res) => {
     if (isUserLimited) {
       return res.json({
         status: false,
-        msg: "You have scanned 500 times today. Please come back tomorrow.",
+        msg: "You have scanned 50 times today. Please come back tomorrow.",
       });
     }
     console.log("======> User is not blocked");
@@ -489,7 +495,7 @@ router.get("/getCardsForUser/:id", async (req, res) => {
         redeemed: true,
       },
       [
-        { path: "cardId", select: "_id maxPoints status details validUntil " },
+        { path: "cardId", select: "_id maxPoints status details validUntil image " },
         {
           path: "providerId",
           select: "_id logo.filename providerName address region",
@@ -503,7 +509,7 @@ router.get("/getCardsForUser/:id", async (req, res) => {
         redeemed: false,
       },
       [
-        { path: "cardId", select: "_id maxPoints status details validUntil " },
+        { path: "cardId", select: "_id maxPoints status details validUntil image" },
         {
           path: "providerId",
           select: "_id logo.filename providerName address region",
@@ -520,6 +526,7 @@ router.get("/getCardsForUser/:id", async (req, res) => {
       obj.region = element.providerId.region
       obj.logo = element.providerId.logo.filename
       obj.cardId = element.cardId._id
+      obj.image = element.cardId?.image ?? element.providerId.logo.filename
       obj.maxPoints = element.cardId.maxPoints
       obj.details = element.cardId.details
       obj.validUntil = element.cardId.validUntil
@@ -541,11 +548,12 @@ router.get("/getCardsForUser/:id", async (req, res) => {
       obj.providerName  = element.providerId.providerName
       obj.address  = element.providerId.address
       obj.region = element.providerId.region
+      obj.image = element.cardId?.image ?? element.providerId.logo.filename
       obj.logo = element.providerId.logo.filename
-      obj.cardId = element.cardId._id
-      obj.maxPoints = element.cardId.maxPoints
-      obj.details = element.cardId.details
-      obj.validUntil = element.cardId.validUntil
+      obj.cardId = element.cardId?._id
+      obj.maxPoints = element.cardId?.maxPoints
+      obj.details = element.cardId?.details
+      obj.validUntil = element.cardId?.validUntil
       obj.status = element.status
       obj.points  =  element.points
       obj.createdAt = element.createdAt

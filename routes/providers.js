@@ -1466,7 +1466,7 @@ router.get("/getOneUser/:id", async (req, res) => {
               companyPresentationStartDay: data[i].companyPresentationStartDay,
               companyPresentationEndDay: data[i].companyPresentationEndDay,
               url: data[i].companyPresentation,
-              title: "Firmenpräsentation",
+              title: "Über uns",
               type: type,
               pdf_type: data[i].companyPresentationpdf ? true : false,
               pdfuri: data[i].companyPresentationpdf
@@ -1628,7 +1628,7 @@ router.get("/getOneUser/:id", async (req, res) => {
               menuStartDay: data[i].menuStartDay,
               menuEndDay: data[i].menuEndDay,
               url: data[i].menu,
-              title: "Speisekarte",
+              title: "Menü",
               type: type,
               pdf_type: data[i].menupdf ? true : false,
               pdfuri: data[i].menupdf
