@@ -92,8 +92,9 @@ router.get("/feed", async (req, res) => {
       if (!acc[providerId]) {
         acc[providerId] = {
           id: providerId, 
-          name: user.providerName,
-          imgUrl: 'https://' + hostname + user.logo.url, 
+          username: user.providerName,
+          title:user.providerName,
+          profile: 'https://' + hostname + user.logo.url, 
           stories: [],
         };
       }
@@ -101,8 +102,12 @@ router.get("/feed", async (req, res) => {
 
       acc[providerId].stories.push({
         id: story._id.toString(),
-        source: { uri: story.mediaUrl },
-        ...(story.mediaType === "video" && { mediaType: "video" }),
+        storyId: story._id.toString(),
+        duration:30,
+        isReadMore:false,
+        isSeen:false,
+        uri: story.mediaUrl,
+        ...(story.mediaType === "video" ? { type: "video" } : {type:"image"}),
       });
 
       return acc;
