@@ -106,7 +106,7 @@ router.get("/feed", async (req, res) => {
         duration:30,
         isReadMore:false,
         isSeen:false,
-        uri: story.mediaUrl,
+        url: story.mediaUrl,
         ...(story.mediaType === "video" ? { type: "video" } : {type:"image"}),
       });
 
