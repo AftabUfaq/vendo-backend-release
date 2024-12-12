@@ -289,8 +289,6 @@ router.get("/getProviderStories/:providerId", async (req, res) => {
   }
 });
 
-
-
 router.delete("/deleteStory/:storyId", async (req, res) => {
   try {    
     const { storyId } = req.params;
