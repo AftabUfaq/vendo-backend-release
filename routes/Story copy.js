@@ -6,7 +6,6 @@ const multer = require('multer');
 const Story = require("../lists/Story");
 const fileUploadService = new FileUploadService();
 const mongoose = require("mongoose");
-const moment = require("moment");
 
 const upload = multer({ limits: { fileSize: 500 * 1024 * 1024 } });
 
@@ -48,6 +47,106 @@ router.post("/create", async (req, res) => {
   }
 });
 
+// Like a story
+router.post("/like/:storyId", isAuthenticated, async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const userId = req.user._id;
+
+    const story = await Story.findById(storyId);
+    if (!story) return res.status(404).json({ error: "Story not found" });
+
+    // Check if the user already liked the story
+    const alreadyLiked = story.likes.some(
+      (like) => like.userId.toString() === userId.toString()
+    );
+
+    if (!alreadyLiked) {
+      story.likes.push({ userId });
+      await story.save();
+      res
+        .status(200)
+        .json({ message: "Story liked", likes: story.likes.length });
+    } else {
+      res.status(400).json({ message: "User has already liked this story" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error liking story" });
+  }
+});
+
+
+router.get("/feed", async (req, res) => {
+  try {
+    const stories = await Story.find({
+      createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    }).populate("user", "providerName logo");
+
+    var hostname = req.headers.host
+    // Group stories by provider
+    const groupedStories = stories.reduce((acc, story) => {
+      const { user } = story;
+      const providerId = user._id.toString();
+
+
+      if (!acc[providerId]) {
+        acc[providerId] = {
+          id: providerId,
+          username: user.providerName,
+          title: user.providerName,
+          profile: 'https://' + hostname + user.logo.url,
+          stories: [],
+        };
+      }
+
+
+      acc[providerId].stories.push({
+        id: story._id.toString(),
+        storyId: story._id.toString(),
+        duration: 30,
+        isReadMore: false,
+        isSeen: false,
+        url: story.mediaUrl,
+        ...(story.mediaType === "video" ? { type: "video" } : { type: "image" }),
+      });
+
+      return acc;
+    }, {});
+
+
+    const formattedStories = Object.values(groupedStories);
+
+    res.status(200).json({ stories: formattedStories });
+  } catch (error) {
+    console.log(error);
+    
+    res.status(500).json({ error: "Error fetching stories feed" });
+  }
+});
+
+// Mark story as viewed
+router.post("/view/:storyId", isAuthenticated, async (req, res) => {
+  try {
+    const { storyId } = req.params;
+
+    const story = await Story.findById(storyId);
+    if (!story) return res.status(404).json({ error: "Story not found" });
+
+    const hasViewed = story.views.some(
+      (view) => view.userId.toString() === req.user._id.toString()
+    ); http://localhost:3001/stories/
+
+    if (!hasViewed) {
+      story.views.push({ userId: req.user._id });
+      await story.save();
+      res.status(200).json({ message: "Story viewed" });
+    } else {
+      res.status(200).json({ message: "Already viewed" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error viewing story" });
+  }
+});
 
 router.post('/upload/video', upload.single('video'), async (req, res) => {
   try {
@@ -96,107 +195,6 @@ router.post("/upload/image", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: "Failed to upload file" });
   }
 })
-// Like a story
-router.post("/like/:storyId", isAuthenticated, async (req, res) => {
-  try {
-    const { storyId } = req.params;
-    const userId = req.user._id;
-
-    const story = await Story.findById(storyId);
-    if (!story) return res.status(404).json({ error: "Story not found" });
-
-    // Check if the user already liked the story
-    const alreadyLiked = story.likes.some(
-      (like) => like.userId.toString() === userId.toString()
-    );
-
-    if (!alreadyLiked) {
-      story.likes.push({ userId });
-      await story.save();
-      res
-        .status(200)
-        .json({ message: "Story liked", likes: story.likes.length });
-    } else {
-      res.status(400).json({ message: "User has already liked this story" });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Error liking story" });
-  }
-});
-
-
-
-
-router.get("/feed", async (req, res) => {
-  try {
-    const stories = await Story.find({
-      createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    }).populate("user", "providerName logo");
-
-    var hostname = req.headers.host
-    // Group stories by provider
-    const groupedStories = stories.reduce((acc, story) => {
-      const { user } = story;
-      const providerId = user._id.toString();
-
-
-      if (!acc[providerId]) {
-        acc[providerId] = {
-          id: providerId,
-          username: user.providerName,
-          title: user.providerName,
-          profile: 'https://' + hostname + user.logo.url,
-          stories: [],
-        };
-      }
-
-
-      acc[providerId].stories.push({
-        id: story._id.toString(),
-        storyId: story._id.toString(),
-        duration: 30,
-        isReadMore: false,
-        isSeen: false,
-        url: story.mediaUrl,
-        ...(story.mediaType === "video" ? { type: "video" } : { type: "image" }),
-      });
-
-      return acc;
-    }, {});
-
-
-    const formattedStories = Object.values(groupedStories);
-
-    res.status(200).json({ stories: formattedStories });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({ error: "Error fetching stories feed" });
-  }
-});
-
-// Mark story as viewed
-router.post("/view/:storyId", isAuthenticated, async (req, res) => {
-  try {
-    const { storyId } = req.params;
-
-    const story = await Story.findById(storyId);
-    if (!story) return res.status(404).json({ error: "Story not found" });
-
-    const hasViewed = story.views.some(
-      (view) => view.userId.toString() === req.user._id.toString()
-    ); 
-    if (!hasViewed) {
-      story.views.push({ userId: req.user._id });
-      await story.save();
-      res.status(200).json({ message: "Story viewed" });
-    } else {
-      res.status(200).json({ message: "Already viewed" });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Error viewing story" });
-  }
-});
 
 
 router.post("/upload/story", upload.single("file"), async (req, res) => {
@@ -228,9 +226,25 @@ router.post("/upload/story", upload.single("file"), async (req, res) => {
     });
     res.status(201).json({ status: true, message: "Story created", story });
   } catch (error) {
-    res.status(500).json({ status: false, message: "Failed to upload file", errorMessage: JSON.stringify(error) });
+    res.status(500).json({ status: false, message: "Failed to upload file", errorMessage:JSON.stringify(error) });
   }
 })
+
+
+
+// router.get("/getProviderStories/:providerId", async (req, res) => {
+//   try {
+//     const stories = await Story.find({
+//       'user': new ObjectId(`${req.params.providerId}`),
+//     })
+//     console.log(stories);
+    
+//     res.status(200).json({ status: true,message: "Stores has been get successfully", stories: stories });
+//   } catch (error) {
+//     res.status(500).json({ status: false, status: "Error fetching stories feed", stories: [] });
+//   }
+// });
+
 
 router.get("/getProviderStories/:providerId", async (req, res) => {
   try {
@@ -246,7 +260,7 @@ router.get("/getProviderStories/:providerId", async (req, res) => {
     }
 
     // Fetch all stories where the user matches providerId
-    const stories = await Story.find({ user: providerId }).sort({ createdAt: -1 }).populate("user", "providerName logo.url");
+    const stories = await Story.find({ user: providerId }).populate("user", "providerName logo");
 
     if (stories.length === 0) {
       return res.status(404).json({
@@ -255,29 +269,11 @@ router.get("/getProviderStories/:providerId", async (req, res) => {
         stories: [],
       });
     }
-    var hostname = req.headers.host
-    let formatedStories = stories.map((story) => {
-      return {
-        id: story._id.toString(),
-        storyId: story._id.toString(),
-
-        mediaType: story.mediaType,
-        mediaUrl: story.mediaUrl,
-        title: story.mediaType === "video" ? "Video" : "Image",
-        views: story.views.length,
-        providerName: story.user.providerName,
-        providerId: story.user._id.toString(),
-        providerLog: `https://${hostname}${story.user.logo.url}`,
-        createdAt: story.createdAt,
-      }
-
-    });
-
 
     res.status(200).json({
       status: true,
       message: "Stories fetched successfully",
-      stories: formatedStories,
+      stories: stories,
     });
   } catch (error) {
     console.error("Error fetching provider stories:", error); // Log the error for debugging
@@ -286,32 +282,6 @@ router.get("/getProviderStories/:providerId", async (req, res) => {
       message: "Error fetching stories feed",
       stories: [],
     });
-  }
-});
-
-
-
-router.delete("/deleteStory/:storyId", async (req, res) => {
-  try {    
-    const { storyId } = req.params;
-    const story = await Story.findById(storyId);
-    if (!story) return res.status(404).json({ error: "Story not found" });
-    await Story.findByIdAndDelete(storyId);
-    res.status(200).json({status: true,  message: "Story deleted" });
-  } catch (error) {
-    res.status(500).json({status: false, error: "Error deleting story" });
-  }
-});
-
-router.put("/updateTime/:storyId", async (req, res) => {
-  try {    
-    const { storyId } = req.params;
-    const story = await Story.findById(storyId);
-    if (!story) return res.status(404).json({ error: "Story not found2",storyId });
-    await Story.findByIdAndUpdate(storyId, { createdAt:Date.now() });
-    res.status(200).json({status: true,  message: "Story Time Updated" });
-  } catch (error) {
-    res.status(500).json({status: false, error: "Error updting story", errorMessage:error });
   }
 });
 
