@@ -18,7 +18,7 @@ const storySchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: "24h", // Automatically deletes after 24 hours
+   // expires: "24h", // Automatically deletes after 24 hours
   },
   views: [
     {

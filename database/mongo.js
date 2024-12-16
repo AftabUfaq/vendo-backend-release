@@ -16,7 +16,8 @@ module.exports = {
                
                 return callback(err, false);
             }
-
+            console.log(process.env.DATABASE,"(process.env.DATABASE");
+            
             dbConnection = db.db(process.env.DATABASE);
             
 

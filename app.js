@@ -7,9 +7,6 @@ var createInitialUser = require("./initial-admin");
 const cron = require('node-cron');
 
 createInitialUser();
-
-const admin = require("firebase-admin");
-
 var indexRouter = require("./routes/index");
 var indexTest = require("./routes/index_test");
 const users = require("./routes/users");
