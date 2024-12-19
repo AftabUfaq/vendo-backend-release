@@ -157,7 +157,6 @@ router.post('/add_user/', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    console.log('login works');
     let resBody = {
         result: [],
         msg: "",
@@ -195,6 +194,7 @@ router.post('/login', async (req, res) => {
                 resBody.status = true
                 resBody.result = {
                     user: data[0],
+                    type:"customer",
                     token: token
                 }
 

@@ -119,8 +119,7 @@ const uploadImage = async (base64image, fieldname) => {
   }
 };
 
-router.post(
-  "/signup",
+router.post("/signup",
   [
     body("email").isEmail().withMessage("Please enter a valid email."),
     body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
@@ -217,8 +216,7 @@ router.post(
   }
 );
 
-router.post(
-  "/login",
+router.post("/login",
   [
     body("email").isEmail().withMessage("Please enter a valid email."),
     body("password").exists().withMessage("Password is required."),
@@ -261,9 +259,17 @@ router.post(
         JWT_SECRET,
         { expiresIn: "180d" }
       );
+      const local_provider = {
+        _id:provider._id,
+        providerName:provider.providerName,
+        address:provider.address,
+        postcode:provider.postcode,
+        email:provider.email,
+        logo:provider.logo.url,
 
+      }
       resBody.status = true;
-      resBody.result = { provider, token };
+      resBody.result = { user:local_provider, token, type:"provider" };
       res.json(resBody);
     } catch (error) {
       console.error("Error:", error);
@@ -397,63 +403,62 @@ router.post(
 
 
 
-router.post(
-  "/login",
-  [
-    body("email").isEmail().withMessage("Please enter a valid email."),
-    body("password").notEmpty().withMessage("Password is required."),
-  ],
-  async (req, res) => {
-    let resBody = {
-      result: null,
-      msg: "",
-      status: false,
-    };
+// router.post("/login",
+//   [
+//     body("email").isEmail().withMessage("Please enter a valid email."),
+//     body("password").notEmpty().withMessage("Password is required."),
+//   ],
+//   async (req, res) => {
+//     let resBody = {
+//       result: null,
+//       msg: "",
+//       status: false,
+//     };
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      resBody.msg = errors.array().map((err) => err.msg).join(", ");
-      return res.status(400).json(resBody);
-    }
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       resBody.msg = errors.array().map((err) => err.msg).join(", ");
+//       return res.status(400).json(resBody);
+//     }
 
-    try {
-      const { email, password } = req.body;
+//     try {
+//       const { email, password } = req.body;
 
-      // Find provider by email
-      const provider = await Provider.findOne({ email });
-      if (!provider) {
-        resBody.msg = "Invalid email or password.";
-        return res.status(401).json(resBody);
-      }
+//       // Find provider by email
+//       const provider = await Provider.findOne({ email });
+//       if (!provider) {
+//         resBody.msg = "Invalid email or password.";
+//         return res.status(401).json(resBody);
+//       }
 
-      // Hash the password and compare it with the stored hash
-      const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
-      if (provider.password !== hashedPassword) {
-        resBody.msg = "Invalid email or password.";
-        return res.status(401).json(resBody);
-      }
+//       // Hash the password and compare it with the stored hash
+//       const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
+//       if (provider.password !== hashedPassword) {
+//         resBody.msg = "Invalid email or password.";
+//         return res.status(401).json(resBody);
+//       }
 
-      // Generate JWT token if login is successful
-      const token = jwt.sign(
-        {
-          data: { id: provider._id, email: provider.email },
-        },
-        JWT_SECRET,
-        { expiresIn: "180d" } // 180 days expiration
-      );
+//       // Generate JWT token if login is successful
+//       const token = jwt.sign(
+//         {
+//           data: { id: provider._id, email: provider.email },
+//         },
+//         JWT_SECRET,
+//         { expiresIn: "180d" } // 180 days expiration
+//       );
 
-      // Respond with status, provider data, and token
-      resBody.status = true;
-      resBody.result = { provider, token };
-      resBody.msg = "Login successful!";
-    } catch (error) {
-      console.log("Error:", error);
-      resBody.msg = "Something went wrong. Please try again.";
-    }
+//       // Respond with status, provider data, and token
+//       resBody.status = true;
+//       resBody.result = { provider, token };
+//       resBody.msg = "Login successful!";
+//     } catch (error) {
+//       console.log("Error:", error);
+//       resBody.msg = "Something went wrong. Please try again.";
+//     }
 
-    res.json(resBody);
-  }
-);
+//     res.json(resBody);
+//   }
+// );
 
 router.post("/add_user/", validation, (req, res) => {
   let resBody = {
@@ -579,79 +584,79 @@ router.post("/add_user/", validation, (req, res) => {
   });
 });
 
-router.post("/login", async (req, res) => {
-  let resBody = {
-    result: [],
-    msg: "",
-    status: false,
-  };
+// router.post("/login", async (req, res) => {
+//   let resBody = {
+//     result: [],
+//     msg: "",
+//     status: false,
+//   };
 
-  const email = req.body.email;
-  const password = req.body.password;
+//   const email = req.body.email;
+//   const password = req.body.password;
 
-  try {
-    // ENCRYPTED PASSWORD
-    const pass = crypto.createHash("sha256").update(password).digest("base64");
+//   try {
+//     // ENCRYPTED PASSWORD
+//     const pass = crypto.createHash("sha256").update(password).digest("base64");
 
-    let { data, error } = await db.getData(
-      ProviderModel,
-      { email: email, password: pass, deactivate: false },
-      {
-        _id: 0,
-        id: "$_id",
-        email: 1,
-        providerName: 1,
-        postcode: 1,
-        address: 1,
-        region: 1,
-        postcode: 1,
-        branch: 1,
-        telephone: 1,
-        mobile: 1,
-        domain: 1,
-        logoname: "$logo.url",
-        deactivate: 1,
-        emailVerified: 1,
-        availability: 1,
-        paypalMode: 1,
-        cashMode: 1,
-        flyer: "$flyer.url",
-        category: 1,
-      }
-    );
+//     let { data, error } = await db.getData(
+//       ProviderModel,
+//       { email: email, password: pass, deactivate: false },
+//       {
+//         _id: 0,
+//         id: "$_id",
+//         email: 1,
+//         providerName: 1,
+//         postcode: 1,
+//         address: 1,
+//         region: 1,
+//         postcode: 1,
+//         branch: 1,
+//         telephone: 1,
+//         mobile: 1,
+//         domain: 1,
+//         logoname: "$logo.url",
+//         deactivate: 1,
+//         emailVerified: 1,
+//         availability: 1,
+//         paypalMode: 1,
+//         cashMode: 1,
+//         flyer: "$flyer.url",
+//         category: 1,
+//       }
+//     );
 
-    console.log(error);
+//     console.log(error);
 
-    if (error === null) {
-      if (data.length > 1) {
-        resBody.msg = "Duplicate users exists with that email address";
-      } else if (data.length === 1) {
-        const token = jwt.sign(
-          {
-            data: data[0],
-          },
-          "67TYGHRE99UISFD890U43JHRWERTYDGH",
-          { expiresIn: "180d" }
-        );
+//     if (error === null) {
+//       if (data.length > 1) {
+//         resBody.msg = "Duplicate users exists with that email address";
+//       } else if (data.length === 1) {
+//         const token = jwt.sign(
+//           {
+//             data: data[0],
+//           },
+//           "67TYGHRE99UISFD890U43JHRWERTYDGH",
+//           { expiresIn: "180d" }
+//         );
 
-        resBody.status = true;
-        resBody.result = {
-          user: data[0],
-          token: token,
-        };
-      } else {
-        resBody.msg = "No user found";
-      }
-    } else {
-      resBody.msg = error.message;
-    }
-  } catch (e) {
-    console.log(e);
-    resBody.msg = "Something went wrong";
-  }
+//         resBody.status = true;
+//         resBody.result = {
+//           user: data[0],
+//           token: token,
+//         };
+//       } else {
+//         resBody.msg = "No user found";
+//       }
+//     } else {
+//       resBody.msg = error.message;
+//     }
+//   } catch (e) {
+//     console.log(e);
+//     resBody.msg = "Something went wrong";
+//   }
 
-  res.send(JSON.stringify(resBody));
-});
+//   res.send(JSON.stringify(resBody));
+// });
 
 router.post("/resetPassword", validation, async (req, res) => {
   let resBody = {
