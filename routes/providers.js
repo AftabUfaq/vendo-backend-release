@@ -261,9 +261,17 @@ router.post(
         JWT_SECRET,
         { expiresIn: "180d" }
       );
+      const local_provider = {
+        _id:provider._id,
+        providerName:provider.providerName,
+        address:provider.address,
+        postcode:provider.postcode,
+        email:provider.email,
+        logo:provider.logo.url,
 
+      }
       resBody.status = true;
-      resBody.result = { provider, token };
+      resBody.result = { user:local_provider, token, type:"provider" };
       res.json(resBody);
     } catch (error) {
       console.error("Error:", error);
