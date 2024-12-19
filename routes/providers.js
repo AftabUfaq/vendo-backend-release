@@ -274,6 +274,7 @@ router.post("/login",
     } catch (error) {
       console.error("Error:", error);
       resBody.msg = "Something went wrong. Please try again.";
+      resBody.err = error
       res.json(resBody);
     }
   }
@@ -501,14 +502,15 @@ router.post("/add_user/", validation, (req, res) => {
 
       // console.log(extraBody);
 
-      //const password = req.body.password;
-
+        const password = req.body.password;
+        const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
       // ENCRYPTED PASSWORD
       //const pass = crypto.createHash('sha256').update(password).digest('base64');
       //req.body.password = pass
 
       let { data, error } = await db.insertOneData(ProviderModel, {
         ...req.body,
+        password:hashedPassword,
         update_time: new Date().toISOString(),
         ...extraBody,
       });
