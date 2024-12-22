@@ -280,8 +280,7 @@ router.post("/login",
   }
 );
 
-router.post(
-  "/resetPassword",
+router.post("/resetPassword",
   [
     body("email").isEmail().withMessage("Please enter a valid email."),
   ],
@@ -347,8 +346,7 @@ router.post(
   }
 );
 
-router.post(
-  "/verifyOtp",
+router.post("/verifyOtp",
   [
     body("email").isEmail().withMessage("Please enter a valid email."),
     body("otp").exists().withMessage("OTP is required."),
@@ -402,64 +400,6 @@ router.post(
   }
 );
 
-
-
-// router.post("/login",
-//   [
-//     body("email").isEmail().withMessage("Please enter a valid email."),
-//     body("password").notEmpty().withMessage("Password is required."),
-//   ],
-//   async (req, res) => {
-//     let resBody = {
-//       result: null,
-//       msg: "",
-//       status: false,
-//     };
-
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       resBody.msg = errors.array().map((err) => err.msg).join(", ");
-//       return res.status(400).json(resBody);
-//     }
-
-//     try {
-//       const { email, password } = req.body;
-
-//       // Find provider by email
-//       const provider = await Provider.findOne({ email });
-//       if (!provider) {
-//         resBody.msg = "Invalid email or password.";
-//         return res.status(401).json(resBody);
-//       }
-
-//       // Hash the password and compare it with the stored hash
-//       const hashedPassword = crypto.createHash("sha256").update(password).digest("base64");
-//       if (provider.password !== hashedPassword) {
-//         resBody.msg = "Invalid email or password.";
-//         return res.status(401).json(resBody);
-//       }
-
-//       // Generate JWT token if login is successful
-//       const token = jwt.sign(
-//         {
-//           data: { id: provider._id, email: provider.email },
-//         },
-//         JWT_SECRET,
-//         { expiresIn: "180d" } // 180 days expiration
-//       );
-
-//       // Respond with status, provider data, and token
-//       resBody.status = true;
-//       resBody.result = { provider, token };
-//       resBody.msg = "Login successful!";
-//     } catch (error) {
-//       console.log("Error:", error);
-//       resBody.msg = "Something went wrong. Please try again.";
-//     }
-
-//     res.json(resBody);
-//   }
-// );
 
 router.post("/add_user/", validation, (req, res) => {
   let resBody = {
@@ -585,159 +525,6 @@ router.post("/add_user/", validation, (req, res) => {
     res.send(JSON.stringify(resBody));
   });
 });
-
-// router.post("/login", async (req, res) => {
-//   let resBody = {
-//     result: [],
-//     msg: "",
-//     status: false,
-//   };
-
-//   const email = req.body.email;
-//   const password = req.body.password;
-
-//   try {
-//     // ENCRYPTED PASSWORD
-//     const pass = crypto.createHash("sha256").update(password).digest("base64");
-
-//     let { data, error } = await db.getData(
-//       ProviderModel,
-//       { email: email, password: pass, deactivate: false },
-//       {
-//         _id: 0,
-//         id: "$_id",
-//         email: 1,
-//         providerName: 1,
-//         postcode: 1,
-//         address: 1,
-//         region: 1,
-//         postcode: 1,
-//         branch: 1,
-//         telephone: 1,
-//         mobile: 1,
-//         domain: 1,
-//         logoname: "$logo.url",
-//         deactivate: 1,
-//         emailVerified: 1,
-//         availability: 1,
-//         paypalMode: 1,
-//         cashMode: 1,
-//         flyer: "$flyer.url",
-//         category: 1,
-//       }
-//     );
-
-//     console.log(error);
-
-//     if (error === null) {
-//       if (data.length > 1) {
-//         resBody.msg = "Duplicate users exists with that email address";
-//       } else if (data.length === 1) {
-//         const token = jwt.sign(
-//           {
-//             data: data[0],
-//           },
-//           "67TYGHRE99UISFD890U43JHRWERTYDGH",
-//           { expiresIn: "180d" }
-//         );
-
-//         resBody.status = true;
-//         resBody.result = {
-//           user: data[0],
-//           token: token,
-//         };
-//       } else {
-//         resBody.msg = "No user found";
-//       }
-//     } else {
-//       resBody.msg = error.message;
-//     }
-//   } catch (e) {
-//     console.log(e);
-//     resBody.msg = "Something went wrong";
-//   }
-
-//   res.send(JSON.stringify(resBody));
-// });
-
-// router.post("/resetPassword", validation, async (req, res) => {
-//   let resBody = {
-//     result: [],
-//     msg: "",
-//     status: false,
-//   };
-
-//   try {
-//     const email = req.body.email;
-//     const password = req.body.oldPassword;
-//     const newpassword = req.body.newPassword;
-//     const pass = crypto.createHash("sha256").update(password).digest("base64");
-//     const newpass = crypto
-//       .createHash("sha256")
-//       .update(newpassword)
-//       .digest("base64");
-
-//     let response = await db.getData(
-//       ProviderModel,
-//       { email: email, password: pass },
-//       {
-//         _id: 0,
-//         id: "$_id",
-//         email: 1,
-//         userName: 1,
-//         name: 1,
-//         street: 1,
-//         number: 1,
-//         postcode: 1,
-//         place: 1,
-//         region: 1,
-//         mobile: 1,
-//         email: 1,
-//         deliveryNote: 1,
-//         picture: 1,
-//         deactivate: 1,
-//         emailVerified: 1,
-//       }
-//     );
-
-//     if (response.error === null) {
-//       if (response.data.length > 1) {
-//         resBody.msg = "Duplicate users exists with that email address";
-//       } else if (response.data.length === 1) {
-//         var id = new ObjectId(JSON.parse(JSON.stringify(response.data[0])).id);
-//         // console.log(JSON.parse(JSON.stringify(response.data[0])).id)
-
-//         let { data, error } = await db.updateOneData(
-//           ProviderModel,
-//           { _id: id },
-//           { password: newpass },
-//           {
-//             _id: 0,
-//             id: "$_id",
-//           }
-//         );
-
-//         console.log(data, error);
-
-//         if (error === null) {
-//           resBody.status = true;
-//           resBody.result = data;
-//         } else {
-//           resBody.msg = error.message;
-//         }
-//       } else {
-//         resBody.msg = "No user found";
-//       }
-//     } else {
-//       resBody.msg = error.message;
-//     }
-//   } catch (e) {
-//     console.log(e);
-//     resBody.msg = "Something went wrong";
-//   }
-
-//   res.send(JSON.stringify(resBody));
-// });
 
 router.post("/sendOtp/", async (req, res) => {
   let resBody = {
@@ -2323,8 +2110,7 @@ router.get("/getAllUsersWithLimit/", validation, async (req, res) => {
 
   res.send(JSON.stringify(resBody));
 });
-router.post(
-  "/getAllUsersWithLikeCountandWishlistCount/",
+router.post("/getAllUsersWithLikeCountandWishlistCount/",
   validation,
   async (req, res) => {
     let resBody = {
@@ -2473,64 +2259,6 @@ router.post("/create-availibility", async ()=>{
   }
 })
 
-// router.put("/update-availability", async (req, res) => {
-//   let resBody = {
-//     result: [],
-//     msg: "",
-//     status: false,
-//   };
-
-//   const availabilities = req.body; // Expecting an array of objects
-
-//   try {
-//     // Loop through each availability object in the request body
-//     for (const { providerId, day, from, to } of availabilities) {
-//       // Validate each entry
-//       if (!providerId || !day || !from || !to) {
-//         resBody.msg = "All fields (providerId, day, from, to) are required for each availability object.";
-//         return res.status(400).json(resBody);
-//       }
-
-//       // Find the availability entry
-//       let availability = await ProviderAvailibility.findOne({
-//         providerId: ObjectId(providerId),
-//         day,
-//       });
-
-//       if (availability) {
-//         // Update the existing availability entry
-//         availability.from = from;
-//         availability.to = to;
-//         await availability.save();
-//       } else {
-//         // Create a new availability entry if not found
-//         availability = new ProviderAvailibility({
-//           providerId: ObjectId(providerId),
-//           day,
-//           from,
-//           to,
-//         });
-//         await availability.save();
-//       }
-
-//       // Add the updated or newly created availability to the result
-//       resBody.result.push(availability);
-//     }
-
-//     if (resBody.result.length > 0) {
-//       resBody.status = true;
-//       resBody.msg = "Availability updated successfully.";
-//     } else {
-//       resBody.msg = "No availabilities were updated.";
-//     }
-
-//     return res.json(resBody);
-//   } catch (err) {
-//     resBody.msg = "An error occurred while updating availability.";
-//     return res.status(500).json({ message: err.message });
-//   }
-// });
-
 
 router.put("/update-availability", async (req, res) => {
   let resBody = {
@@ -2595,5 +2323,58 @@ router.put("/update-availability", async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
+
+router.get("/active_provider", async (req, res) => {
+  let resBody = {
+    result: [],
+    msg: "",
+    status: false,
+  };
+
+  try {
+    const query = {_products: { $exists: true, $ne: [] },availability:true};
+
+    let { data, error } = await db.getData(ProviderModel, query, {
+      _id: 0,
+      id: "$_id",
+      logo: "$logo.url",
+      email: 1,
+      providerName: 1,
+      postcode: 1,
+      address: 1,
+      region: 1,
+      postcode: 1,
+      branch: 1,
+      telephone: 1,
+      mobile: 1,
+      domain: 1,
+      deactivate: 1,
+      emailVerified: 1,
+      availability: 1,
+      paypalMode: 1,
+      cashMode: 1,
+      flyer: "$flyer.url",
+      category: 1,
+      deliveryApproxTime: 1,
+      iswelcome: 1,
+      community: 1,
+      description: 1,
+      Imprint: 1,
+    });
+
+    if (error === null) {
+      resBody.status = true;
+      resBody.result = data;
+    } else {
+      resBody.msg = error.message;
+    }
+  } catch (e) {
+    // console.log(e)
+    resBody.msg = "Something went wrong";
+  }
+
+  res.send(JSON.stringify(resBody));
+}) 
 
 module.exports = router;

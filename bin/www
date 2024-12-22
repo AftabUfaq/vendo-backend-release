@@ -18,16 +18,16 @@ var fs = require('fs');
 var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
-   var privateKey  = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.key.pem', 'utf8');
+  // var privateKey  = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.key.pem', 'utf8');
    // var certificate = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.crt.pem', 'utf8');
-   var certificate = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.fullchain.pem', 'utf8');
+  // var certificate = fs.readFileSync('/var/www/ssl/mein-vendoapp.de.fullchain.pem', 'utf8');
  
 
-  var credentials = {key: privateKey, cert: certificate};
-  var server = https.createServer(credentials, app);
+  //var credentials = {key: privateKey, cert: certificate};
+  //var server = https.createServer(credentials, app);
 
 
-  // var server = http.createServer(app);
+   var server = http.createServer(app);
 
 
 /**
