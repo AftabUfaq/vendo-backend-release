@@ -176,7 +176,7 @@ router.post("/signup",
 
       // Send OTP email
       const mailDetails = {
-        from: 'vendomrtn@gmail.com',
+        from: 'support@mein-vendo.de',
         to: email,
         subject: 'Email Verification OTP',
         html: `<!DOCTYPE html>
@@ -317,7 +317,7 @@ router.post(
 
       // Send OTP email
       const mailDetails = {
-        from: 'vendomrtn@gmail.com',
+        from:"support@mein-vendo.de" , // 'vendomrtn@gmail.com',
         to: email,
         subject: 'Password Reset OTP',
         html: `<!DOCTYPE html>
@@ -337,7 +337,7 @@ router.post(
 
       await sendMail(mailDetails);
       resBody.status = true;
-      resBody.msg = "OTP has been sent to your email.";
+      resBody.msg = "OTP has been sent to your email."+otp;
       res.json(resBody);
     } catch (error) {
       console.error("Error:", error);
@@ -660,84 +660,84 @@ router.post("/add_user/", validation, (req, res) => {
 //   res.send(JSON.stringify(resBody));
 // });
 
-router.post("/resetPassword", validation, async (req, res) => {
-  let resBody = {
-    result: [],
-    msg: "",
-    status: false,
-  };
+// router.post("/resetPassword", validation, async (req, res) => {
+//   let resBody = {
+//     result: [],
+//     msg: "",
+//     status: false,
+//   };
 
-  try {
-    const email = req.body.email;
-    const password = req.body.oldPassword;
-    const newpassword = req.body.newPassword;
-    const pass = crypto.createHash("sha256").update(password).digest("base64");
-    const newpass = crypto
-      .createHash("sha256")
-      .update(newpassword)
-      .digest("base64");
+//   try {
+//     const email = req.body.email;
+//     const password = req.body.oldPassword;
+//     const newpassword = req.body.newPassword;
+//     const pass = crypto.createHash("sha256").update(password).digest("base64");
+//     const newpass = crypto
+//       .createHash("sha256")
+//       .update(newpassword)
+//       .digest("base64");
 
-    let response = await db.getData(
-      ProviderModel,
-      { email: email, password: pass },
-      {
-        _id: 0,
-        id: "$_id",
-        email: 1,
-        userName: 1,
-        name: 1,
-        street: 1,
-        number: 1,
-        postcode: 1,
-        place: 1,
-        region: 1,
-        mobile: 1,
-        email: 1,
-        deliveryNote: 1,
-        picture: 1,
-        deactivate: 1,
-        emailVerified: 1,
-      }
-    );
+//     let response = await db.getData(
+//       ProviderModel,
+//       { email: email, password: pass },
+//       {
+//         _id: 0,
+//         id: "$_id",
+//         email: 1,
+//         userName: 1,
+//         name: 1,
+//         street: 1,
+//         number: 1,
+//         postcode: 1,
+//         place: 1,
+//         region: 1,
+//         mobile: 1,
+//         email: 1,
+//         deliveryNote: 1,
+//         picture: 1,
+//         deactivate: 1,
+//         emailVerified: 1,
+//       }
+//     );
 
-    if (response.error === null) {
-      if (response.data.length > 1) {
-        resBody.msg = "Duplicate users exists with that email address";
-      } else if (response.data.length === 1) {
-        var id = new ObjectId(JSON.parse(JSON.stringify(response.data[0])).id);
-        // console.log(JSON.parse(JSON.stringify(response.data[0])).id)
+//     if (response.error === null) {
+//       if (response.data.length > 1) {
+//         resBody.msg = "Duplicate users exists with that email address";
+//       } else if (response.data.length === 1) {
+//         var id = new ObjectId(JSON.parse(JSON.stringify(response.data[0])).id);
+//         // console.log(JSON.parse(JSON.stringify(response.data[0])).id)
 
-        let { data, error } = await db.updateOneData(
-          ProviderModel,
-          { _id: id },
-          { password: newpass },
-          {
-            _id: 0,
-            id: "$_id",
-          }
-        );
+//         let { data, error } = await db.updateOneData(
+//           ProviderModel,
+//           { _id: id },
+//           { password: newpass },
+//           {
+//             _id: 0,
+//             id: "$_id",
+//           }
+//         );
 
-        console.log(data, error);
+//         console.log(data, error);
 
-        if (error === null) {
-          resBody.status = true;
-          resBody.result = data;
-        } else {
-          resBody.msg = error.message;
-        }
-      } else {
-        resBody.msg = "No user found";
-      }
-    } else {
-      resBody.msg = error.message;
-    }
-  } catch (e) {
-    console.log(e);
-    resBody.msg = "Something went wrong";
-  }
+//         if (error === null) {
+//           resBody.status = true;
+//           resBody.result = data;
+//         } else {
+//           resBody.msg = error.message;
+//         }
+//       } else {
+//         resBody.msg = "No user found";
+//       }
+//     } else {
+//       resBody.msg = error.message;
+//     }
+//   } catch (e) {
+//     console.log(e);
+//     resBody.msg = "Something went wrong";
+//   }
 
-  res.send(JSON.stringify(resBody));
-});
+//   res.send(JSON.stringify(resBody));
+// });
 
 router.post("/sendOtp/", async (req, res) => {
   let resBody = {
@@ -780,7 +780,7 @@ router.post("/sendOtp/", async (req, res) => {
     console.log(otp);
 
     let mailDetails = {
-      from: "vendomrtn@gmail.com",
+      from: "support@mein-vendo.de",
       to: email,
       subject: "OTP for new password generation!",
       text: `Your OTP is ${otp}`,
