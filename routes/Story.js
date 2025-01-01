@@ -225,6 +225,8 @@ router.get("/feed2", async (req, res) => {
     res.status(500).json({ error: "Error fetching stories feed" });
   }
 });
+
+
 // Mark story as viewed
 router.post("/view", async (req, res) => {
   try {
