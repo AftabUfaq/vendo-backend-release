@@ -90,34 +90,7 @@ const validation = (req, res, next) => {
   // }
 };
 
-const uploadImage = async (base64image, fieldname) => {
-  try {
-    // to declare some path to store your converted image
-    // var matches = base64image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
-    response = {};
-    // console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",matches);
-    // if (matches.length !== 3) {
-    // 	return ['Invalid input string', null]
-    // }
 
-    // response.type = matches[1];
-    const base64 = fs.readFileSync("path-to-image.jpg", base64image);
-    response.type = "image/png";
-    response.data = Buffer.from(base64, "base64");
-    let decodedImg = response;
-    let imageBuffer = decodedImg.data;
-    let type = decodedImg.type;
-
-    let extension = type.split("/")[1];
-    let fileName = `${+new Date()}-${fieldname}.` + extension;
-    // fs.writeFileSync(path.join(__dirname, "../files/") + fileName, imageBuffer, 'utf8');
-    fs.writeFileSync(process.env.FILE_PATH, imageBuffer, "utf8");
-    return [null, fileName];
-  } catch (e) {
-    console.error(e);
-    return [e, null];
-  }
-};
 
 router.post("/signup",
   [
@@ -280,127 +253,6 @@ router.post("/login",
   }
 );
 
-router.post("/resetPassword",
-  [
-    body("email").isEmail().withMessage("Please enter a valid email."),
-  ],
-  async (req, res) => {
-    let resBody = {
-      result: null,
-      msg: "",
-      status: false,
-    };
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      resBody.msg = errors.array().map((err) => err.msg).join(", ");
-      return res.status(400).json(resBody);
-    }
-
-    try {
-      const { email } = req.body;
-
-      // Check if provider exists
-      const existingProvider = await ProviderModel.findOne({ email });
-      if (!existingProvider) {
-        resBody.msg = "No provider found with this email.";
-        return res.status(404).json(resBody);
-      }
-
-      // Generate new OTP
-      const otp = crypto.randomInt(1111, 9999);
-      existingProvider.otp = otp; // Update OTP in the database
-
-      // Save updated provider
-      await existingProvider.save();
-
-      // Send OTP email
-      const mailDetails = {
-        from:"support@mein-vendo.de" , // 'vendomrtn@gmail.com',
-        to: email,
-        subject: 'Password Reset OTP',
-        html: `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body>
-                <p>Dear user,</p>
-                <p>Your OTP for password reset is: <strong>${otp}</strong></p>
-                <p>Please enter this code in the application to reset your password.</p>
-                <p>Thank you!</p>
-            </body>
-            </html>`
-      };
-
-      await sendMail(mailDetails);
-      resBody.status = true;
-      resBody.msg = "OTP has been sent to your email."+otp;
-      res.json(resBody);
-    } catch (error) {
-      console.error("Error:", error);
-      resBody.msg = "Something went wrong. Please try again.";
-      res.json(resBody);
-    }
-  }
-);
-
-router.post("/verifyOtp",
-  [
-    body("email").isEmail().withMessage("Please enter a valid email."),
-    body("otp").exists().withMessage("OTP is required."),
-  ],
-  async (req, res) => {
-    let resBody = {
-      result: null,
-      msg: "",
-      status: false,
-    };
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      resBody.msg = errors.array().map((err) => err.msg).join(", ");
-      return res.status(400).json(resBody);
-    }
-
-    try {
-      const { email, otp } = req.body;
-
-      // Find the provider by email
-      const provider = await ProviderModel.findOne({ email });
-      if (!provider) {
-        resBody.msg = "No provider found with this email.";
-        return res.status(404).json(resBody);
-      }
-
-      // Check if the provided OTP matches the one in the database
-      if (provider.otp !== otp) {
-        resBody.msg = "Invalid OTP.";
-        return res.status(400).json(resBody);
-      }
-
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          data: { id: provider._id, email: provider.email },
-        },
-        JWT_SECRET,
-        { expiresIn: "180d" }
-      );
-
-      resBody.status = true;
-      resBody.result = { provider, token };
-      res.json(resBody);
-    } catch (error) {
-      console.error("Error:", error);
-      resBody.msg = "Something went wrong. Please try again.";
-      res.json(resBody);
-    }
-  }
-);
-
-
 router.post("/add_user/", validation, (req, res) => {
   let resBody = {
     result: [],
@@ -526,14 +378,13 @@ router.post("/add_user/", validation, (req, res) => {
   });
 });
 
+
 router.post("/sendOtp/", async (req, res) => {
   let resBody = {
     result: [],
     msg: "",
     status: false,
   };
-  console.log(req.body);
-
   try {
     let email = req.body.email;
 
@@ -566,12 +417,19 @@ router.post("/sendOtp/", async (req, res) => {
     const otp = crypto.randomInt(1111, 9999);
     console.log(otp);
 
-    let mailDetails = {
-      from: "support@mein-vendo.de",
-      to: email,
-      subject: "OTP for new password generation!",
-      text: `Your OTP is ${otp}`,
-    };
+    let mailDetails = {  
+      from: "support@mein-vendo.de",  
+      to: email,  
+      subject: "One-Time Password (OTP) for Password Reset",  
+      text: `Dear User,  
+    
+  We have received a request to reset your password. Please use the following One-Time Password (OTP) to proceed: ${otp}  
+    
+  If you did not initiate this request, please contact our support team immediately.  
+    
+  Best regards,  
+  Mein Vendo Support Team`  
+  };
 
     sendMail(mailDetails)
       .then(async (d) => {
@@ -592,7 +450,8 @@ router.post("/sendOtp/", async (req, res) => {
 
         if (response.error === null) {
           resBody.status = true;
-          resBody.result = ["Otp has been sent"];
+          resBody.result = "Otp has been sent";
+          resBody.otp = otp
         } else {
           resBody.msg = error.message;
         }
@@ -688,6 +547,7 @@ router.post("/resetOtpPassword", async (req, res) => {
 
   res.send(JSON.stringify(resBody));
 });
+
 
 router.post("/updateUser", validation, async (req, res) => {
   let resBody = {

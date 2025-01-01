@@ -154,7 +154,7 @@ router.get("/feed", async (req, res) => {
       acc[providerId].stories.push({
         id: story._id.toString(),
         storyId: story._id.toString(),
-        duration: 30,
+        duration: story.mediaType === "video" ? 30:15,
         isReadMore: false,
         isSeen: false,
         url: story.mediaUrl,
@@ -175,19 +175,69 @@ router.get("/feed", async (req, res) => {
   }
 });
 
-// Mark story as viewed
-router.post("/view/:storyId", isAuthenticated, async (req, res) => {
+
+router.get("/feed2", async (req, res) => {
   try {
-    const { storyId } = req.params;
+    const user_id = req.query.user_id
+    const stories = await Story.find({
+      createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    }).populate("user", "providerName logo");
+
+    var hostname = req.headers.host
+    // Group stories by provider
+    const groupedStories = stories.reduce((acc, story) => {
+      const { user } = story;
+      const providerId = user._id.toString();
+
+
+      if (!acc[providerId]) {
+        acc[providerId] = {
+          id: providerId,
+          username: user.providerName,
+          title: user.providerName,
+          profile: 'https://' + hostname + user.logo.url,
+          stories: [],
+        };
+      }
+
+
+      acc[providerId].stories.push({
+        id: story._id.toString(),
+        storyId: story._id.toString(),
+        duration: story.mediaType === "video" ? 30:15,
+        isReadMore: false,
+        totalViews:story.views.length,
+        isSeen: story.views.some(item => item.userId.toString() === user_id.toString()),
+        url: story.mediaUrl,
+        ...(story.mediaType === "video" ? { type: "video" } : { type: "image" }),
+      });
+
+      return acc;
+    }, {});
+
+
+    const formattedStories = Object.values(groupedStories);
+
+    res.status(200).json({ stories: formattedStories });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ error: "Error fetching stories feed" });
+  }
+});
+// Mark story as viewed
+router.post("/view", async (req, res) => {
+  try {
+    const { storyId, userId } = req.query;
 
     const story = await Story.findById(storyId);
     if (!story) return res.status(404).json({ error: "Story not found" });
 
     const hasViewed = story.views.some(
-      (view) => view.userId.toString() === req.user._id.toString()
+      (view) => view.userId.toString() === userId.toString()
     ); 
     if (!hasViewed) {
-      story.views.push({ userId: req.user._id });
+      story.views.push({ userId: userId });
       await story.save();
       res.status(200).json({ message: "Story viewed" });
     } else {

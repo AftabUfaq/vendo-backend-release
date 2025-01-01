@@ -108,7 +108,7 @@ router.post('/add_user/', async (req, res) => {
 
 
             let mailDetails = {
-                from: 'vendomrtn@gmail.com',
+                from: 'support@mein-vendo.de',
                 to: req.body.email,
                 subject: 'Deine Registrierung bei Vendo',
                 html: `<!DOCTYPE html>
@@ -303,7 +303,7 @@ router.post('/sendOtp/', async (req, res) => {
         console.log(otp)
 
         let mailDetails = {
-            from: 'vendomrtn@gmail.com',
+            from: 'support@mein-vendo.de',
             to: email,
             // subject: 'OTP for new password generation!',
             // text: `Your OTP is ${otp}`
